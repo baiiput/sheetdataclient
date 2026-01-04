@@ -78,12 +78,15 @@ function onEditTracking(e) {
 
     // OLD VALUE: Format manual karena tidak ada getDisplayValue() untuk old value
     if (e.oldValue !== undefined && e.oldValue !== null && e.oldValue !== '') {
+      // Convert to number first (handle string numbers like "46025.0")
+      var numValue = typeof e.oldValue === 'number' ? e.oldValue : parseFloat(e.oldValue);
+
       // Cek apakah ini kemungkinan tanggal (serial number)
-      if (typeof e.oldValue === 'number' && e.oldValue > 1000 && e.oldValue < 100000) {
+      if (!isNaN(numValue) && numValue > 1000 && numValue < 100000) {
         // Kemungkinan besar ini tanggal serial number
         try {
-          // Konversi serial number ke tanggal
-          var serialDate = new Date(Math.round((e.oldValue - 25569) * 86400 * 1000));
+          // Konversi serial number ke tanggal (hilangkan decimal dengan Math.floor)
+          var serialDate = new Date(Math.round((Math.floor(numValue) - 25569) * 86400 * 1000));
 
           // Validasi: cek apakah hasil konversi masuk akal (tahun antara 1900-2100)
           if (serialDate.getFullYear() >= 1900 && serialDate.getFullYear() <= 2100) {
