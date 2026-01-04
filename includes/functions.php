@@ -105,10 +105,13 @@ function logoutUser() {
 }
 
 /**
- * Escape HTML
+ * Escape HTML (with NULL handling)
  */
 function e($string) {
-    return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+    if ($string === null || $string === '') {
+        return '';
+    }
+    return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
 }
 
 /**
@@ -335,9 +338,13 @@ function getChangeTypeLabel($oldValue, $newValue) {
 }
 
 /**
- * Truncate text
+ * Truncate text (with NULL handling)
  */
 function truncate($text, $length = 50, $suffix = '...') {
+    if ($text === null || $text === '') {
+        return '';
+    }
+    $text = (string)$text;
     if (mb_strlen($text) <= $length) {
         return $text;
     }
