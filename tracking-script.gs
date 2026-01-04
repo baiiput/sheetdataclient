@@ -2,7 +2,7 @@
 // 🚀 STARLINK MANAGEMENT SYSTEM - CHANGE TRACKING
 // ========================================
 // Script untuk tracking semua perubahan di Google Sheet
-// FIXED: Proper handling untuk tanggal dan format data
+// FIXED: Menggunakan getDisplayValue() untuk tanggal
 
 // ========================================
 // 🔧 KONFIGURASI
@@ -58,29 +58,48 @@ function onEditTracking(e) {
     var columnName = getColumnLetter(column);
 
     // ========================================
-    // 🔧 FIXED: Handle tanggal dengan benar
+    // 🔧 SIMPLE FIX: Gunakan getDisplayValue()
     // ========================================
 
-    var range = e.range;
     var oldValue = '';
     var newValue = '';
 
-    // Get formatted values (untuk tanggal akan jadi format readable)
+    // NEW VALUE: Gunakan getDisplayValue() - ini otomatis format tanggal!
     try {
-      // Untuk old value, kita harus format manual karena e.oldValue bisa berupa serial number
-      if (e.oldValue !== undefined && e.oldValue !== null && e.oldValue !== '') {
-        oldValue = formatCellValue(e.oldValue, range);
+      var displayValue = e.range.getDisplayValue();
+      if (displayValue && displayValue !== '') {
+        newValue = displayValue;
+      } else if (e.value !== undefined && e.value !== null) {
+        newValue = e.value.toString();
       }
-
-      // Untuk new value, ambil dari range yang sudah diformat
-      if (e.value !== undefined && e.value !== null && e.value !== '') {
-        newValue = formatCellValue(e.value, range);
-      }
-    } catch (formatError) {
-      Logger.log('⚠️ Format error: ' + formatError.message);
-      // Fallback ke toString
-      oldValue = (e.oldValue || '').toString();
+    } catch (err) {
       newValue = (e.value || '').toString();
+    }
+
+    // OLD VALUE: Format manual karena tidak ada getDisplayValue() untuk old value
+    if (e.oldValue !== undefined && e.oldValue !== null && e.oldValue !== '') {
+      // Cek apakah ini kemungkinan tanggal (serial number)
+      if (typeof e.oldValue === 'number' && e.oldValue > 1000 && e.oldValue < 100000) {
+        // Kemungkinan besar ini tanggal serial number
+        try {
+          // Konversi serial number ke tanggal
+          var serialDate = new Date(Math.round((e.oldValue - 25569) * 86400 * 1000));
+
+          // Validasi: cek apakah hasil konversi masuk akal (tahun antara 1900-2100)
+          if (serialDate.getFullYear() >= 1900 && serialDate.getFullYear() <= 2100) {
+            oldValue = Utilities.formatDate(serialDate, 'Asia/Jakarta', 'dd/MM/yyyy');
+          } else {
+            // Bukan tanggal, convert ke string biasa
+            oldValue = e.oldValue.toString();
+          }
+        } catch (dateErr) {
+          Logger.log('⚠️ Date conversion error: ' + dateErr.message);
+          oldValue = e.oldValue.toString();
+        }
+      } else {
+        // Bukan number atau di luar range tanggal, convert langsung
+        oldValue = e.oldValue.toString();
+      }
     }
 
     // Jika nilai sama, skip (tidak ada perubahan)
@@ -128,44 +147,8 @@ function onEditTracking(e) {
 }
 
 // ========================================
-// 🔧 HELPER: Format Cell Value
+// 🔧 HELPER: Format Value
 // ========================================
-
-/**
- * Format cell value dengan benar, termasuk tanggal
- */
-function formatCellValue(value, range) {
-  if (value === null || value === undefined || value === '') {
-    return '';
-  }
-
-  // Cek apakah ini adalah tanggal (serial number)
-  if (typeof value === 'number') {
-    // Coba parse sebagai tanggal
-    try {
-      var dateValue = new Date((value - 25569) * 86400 * 1000); // Convert Excel serial to Date
-
-      // Validasi apakah ini benar-benar tanggal yang valid
-      if (!isNaN(dateValue.getTime())) {
-        // Cek apakah nilai asli > 1 (tanggal serial biasanya > 40000)
-        if (value > 1 && value < 100000) {
-          // Format sebagai tanggal Indonesia
-          return Utilities.formatDate(dateValue, 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
-        }
-      }
-    } catch (dateError) {
-      Logger.log('⚠️ Date parse error: ' + dateError.message);
-    }
-  }
-
-  // Jika value adalah Date object
-  if (value instanceof Date) {
-    return Utilities.formatDate(value, 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
-  }
-
-  // Untuk value lainnya, convert ke string
-  return value.toString();
-}
 
 /**
  * Format generic value (untuk client name, kit number, dll)
@@ -212,7 +195,7 @@ function sendToTrackingAPI(data) {
 
   } catch (error) {
     Logger.log('❌ Error sending to API: ' + error.message);
-    // Simpan ke fallback jika API gagal (opsional)
+    // Simpan ke fallback jika API gagal
     saveFallbackLog(data, error.message);
   }
 }
@@ -297,28 +280,24 @@ function testTracking() {
 }
 
 /**
- * Test format tanggal
+ * Test konversi serial number ke tanggal
  */
-function testDateFormat() {
-  // Test dengan serial number
-  var serialNumber = 45321; // Tanggal dalam format serial
-  Logger.log('Serial: ' + serialNumber);
-  Logger.log('Formatted: ' + formatCellValue(serialNumber, null));
+function testSerialToDate() {
+  // Test dengan serial number dari user: 46056 dan 46025
+  var serial1 = 46056;
+  var serial2 = 46025;
 
-  // Test dengan Date object
-  var dateObj = new Date();
-  Logger.log('Date object: ' + dateObj);
-  Logger.log('Formatted: ' + formatCellValue(dateObj, null));
+  Logger.log('Testing serial to date conversion:');
 
-  // Test dengan string
-  var stringValue = 'Test String';
-  Logger.log('String: ' + stringValue);
-  Logger.log('Formatted: ' + formatCellValue(stringValue, null));
+  // Konversi serial 1
+  var date1 = new Date(Math.round((serial1 - 25569) * 86400 * 1000));
+  var formatted1 = Utilities.formatDate(date1, 'Asia/Jakarta', 'dd/MM/yyyy');
+  Logger.log('Serial ' + serial1 + ' = ' + formatted1 + ' (Year: ' + date1.getFullYear() + ')');
 
-  // Test dengan number biasa
-  var normalNumber = 123;
-  Logger.log('Normal number: ' + normalNumber);
-  Logger.log('Formatted: ' + formatCellValue(normalNumber, null));
+  // Konversi serial 2
+  var date2 = new Date(Math.round((serial2 - 25569) * 86400 * 1000));
+  var formatted2 = Utilities.formatDate(date2, 'Asia/Jakarta', 'dd/MM/yyyy');
+  Logger.log('Serial ' + serial2 + ' = ' + formatted2 + ' (Year: ' + date2.getFullYear() + ')');
 }
 
 /**
@@ -386,25 +365,30 @@ function getColumnNumberFromLetter(letter) {
  *
  * 1. Copy semua kode ini ke Apps Script Editor
  * 2. Ganti TRACKING_API_URL dengan URL API VPS Anda
- * 3. Install trigger:
+ * 3. HAPUS TRIGGER LAMA (jika ada):
  *    - Klik icon jam (⏰) di sidebar
+ *    - Hapus semua trigger yang ada
+ * 4. Install trigger BARU:
  *    - Klik "+ Add Trigger"
  *    - Function: onEditTracking
  *    - Event source: From spreadsheet
  *    - Event type: On edit
  *    - Klik Save
- * 4. Authorize script saat diminta
- * 5. Test dengan edit cell di sheet (termasuk tanggal!)
+ * 5. Authorize script saat diminta
+ * 6. Test dengan edit cell tanggal di sheet
+ *
+ * TESTING:
+ * - Test serial conversion: Run function testSerialToDate()
+ * - Test tracking: Run function testTracking()
  *
  * TROUBLESHOOTING:
- * - Cek log: View > Logs
- * - Test manual: Run function testTracking()
- * - Test format tanggal: Run function testDateFormat()
+ * - Cek log: View > Logs atau Executions
  * - Lihat fallback log: Sheet "_Tracking_Log" jika API gagal
+ * - Pastikan trigger menggunakan function onEditTracking (bukan yang lain!)
  *
- * CATATAN:
- * - Trigger onEdit punya quota limit (30 detik execution time)
- * - Jika edit banyak cell sekaligus, akan tercatat per cell
- * - Data disimpan di fallback log jika API timeout/error
- * - Format tanggal otomatis dikonversi ke dd/MM/yyyy HH:mm:ss
+ * CATATAN PENTING:
+ * - Serial 46056 = 04/02/2026
+ * - Serial 46025 = 04/01/2026
+ * - Formula konversi: (serial - 25569) * 86400 * 1000 = milliseconds
+ * - Tanggal otomatis diformat ke dd/MM/yyyy
  */
