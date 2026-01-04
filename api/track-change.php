@@ -91,15 +91,15 @@ try {
     // Get client IP
     $ipAddress = getClientIP();
 
-    // Prepare data untuk insert
+    // Prepare data untuk insert (FIXED: kolom row_num & column_num)
     $insertData = [
         'spreadsheet_id'   => sanitize($data['spreadsheet_id']),
         'spreadsheet_name' => sanitize($data['spreadsheet_name']),
         'sheet_name'       => sanitize($data['sheet_name']),
         'user_email'       => sanitize($data['user_email']),
         'changed_at'       => sanitize($data['timestamp']),
-        'row_number'       => (int) $data['row_number'],
-        'column_number'    => (int) $data['column_number'],
+        'row_num'          => (int) $data['row_number'],
+        'column_num'       => (int) $data['column_number'],
         'column_name'      => sanitize($data['column_name']),
         'cell_address'     => sanitize($data['column_name'] . $data['row_number']),
         'old_value'        => isset($data['old_value']) ? sanitize($data['old_value']) : null,

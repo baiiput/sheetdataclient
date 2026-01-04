@@ -3,6 +3,7 @@
 -- ========================================
 -- Database untuk menyimpan semua perubahan Google Sheet
 -- Support: MySQL 5.7+ / MariaDB 10.2+
+-- FIXED: Reserved word issues untuk MySQL 8.0+
 
 -- ========================================
 -- 🗄️ DATABASE CREATION
@@ -19,45 +20,45 @@ USE sheet_tracking;
 -- ========================================
 -- Tabel utama untuk menyimpan semua log perubahan
 
-CREATE TABLE IF NOT EXISTS change_logs (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS `change_logs` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
   -- Informasi Spreadsheet
-  spreadsheet_id VARCHAR(255) NOT NULL COMMENT 'Google Spreadsheet ID',
-  spreadsheet_name VARCHAR(255) NOT NULL COMMENT 'Nama Spreadsheet',
-  sheet_name VARCHAR(255) NOT NULL COMMENT 'Nama Sheet yang diubah',
+  `spreadsheet_id` VARCHAR(255) NOT NULL COMMENT 'Google Spreadsheet ID',
+  `spreadsheet_name` VARCHAR(255) NOT NULL COMMENT 'Nama Spreadsheet',
+  `sheet_name` VARCHAR(255) NOT NULL COMMENT 'Nama Sheet yang diubah',
 
   -- Informasi User & Waktu
-  user_email VARCHAR(255) NOT NULL COMMENT 'Email user yang melakukan perubahan',
-  changed_at DATETIME NOT NULL COMMENT 'Waktu perubahan (timezone Asia/Jakarta)',
+  `user_email` VARCHAR(255) NOT NULL COMMENT 'Email user yang melakukan perubahan',
+  `changed_at` DATETIME NOT NULL COMMENT 'Waktu perubahan (timezone Asia/Jakarta)',
 
-  -- Informasi Cell/Lokasi
-  row_number INT UNSIGNED NOT NULL COMMENT 'Nomor baris yang diubah',
-  column_number INT UNSIGNED NOT NULL COMMENT 'Nomor kolom (1=A, 2=B, dst)',
-  column_name VARCHAR(10) NOT NULL COMMENT 'Nama kolom (A, B, C, dst)',
-  cell_address VARCHAR(20) NOT NULL COMMENT 'Alamat cell (contoh: A5, B10)',
+  -- Informasi Cell/Lokasi (FIXED: backticks untuk reserved words)
+  `row_num` INT UNSIGNED NOT NULL COMMENT 'Nomor baris yang diubah',
+  `column_num` INT UNSIGNED NOT NULL COMMENT 'Nomor kolom (1=A, 2=B, dst)',
+  `column_name` VARCHAR(10) NOT NULL COMMENT 'Nama kolom (A, B, C, dst)',
+  `cell_address` VARCHAR(20) NOT NULL COMMENT 'Alamat cell (contoh: A5, B10)',
 
   -- Informasi Perubahan
-  old_value TEXT COMMENT 'Nilai sebelum diubah',
-  new_value TEXT COMMENT 'Nilai setelah diubah',
+  `old_value` TEXT COMMENT 'Nilai sebelum diubah',
+  `new_value` TEXT COMMENT 'Nilai setelah diubah',
 
   -- Informasi Tambahan (untuk memudahkan pencarian)
-  client_name VARCHAR(255) DEFAULT NULL COMMENT 'Nama client (dari kolom A)',
-  kit_number VARCHAR(100) DEFAULT NULL COMMENT 'KIT Number (dari kolom I)',
+  `client_name` VARCHAR(255) DEFAULT NULL COMMENT 'Nama client (dari kolom A)',
+  `kit_number` VARCHAR(100) DEFAULT NULL COMMENT 'KIT Number (dari kolom I)',
 
   -- Metadata
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Waktu data masuk ke database',
-  ip_address VARCHAR(45) DEFAULT NULL COMMENT 'IP address dari API request',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Waktu data masuk ke database',
+  `ip_address` VARCHAR(45) DEFAULT NULL COMMENT 'IP address dari API request',
 
   -- Index untuk performa pencarian
-  INDEX idx_spreadsheet (spreadsheet_id),
-  INDEX idx_sheet_name (sheet_name),
-  INDEX idx_user_email (user_email),
-  INDEX idx_changed_at (changed_at),
-  INDEX idx_client_name (client_name),
-  INDEX idx_kit_number (kit_number),
-  INDEX idx_cell (sheet_name, row_number, column_name),
-  INDEX idx_search (sheet_name, user_email, changed_at)
+  INDEX `idx_spreadsheet` (`spreadsheet_id`),
+  INDEX `idx_sheet_name` (`sheet_name`),
+  INDEX `idx_user_email` (`user_email`),
+  INDEX `idx_changed_at` (`changed_at`),
+  INDEX `idx_client_name` (`client_name`),
+  INDEX `idx_kit_number` (`kit_number`),
+  INDEX `idx_cell` (`sheet_name`, `row_num`, `column_name`),
+  INDEX `idx_search` (`sheet_name`, `user_email`, `changed_at`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Log semua perubahan Google Sheet';
@@ -66,18 +67,18 @@ CREATE TABLE IF NOT EXISTS change_logs (
 -- 📊 TABLE: users (opsional - untuk mengelola user)
 -- ========================================
 
-CREATE TABLE IF NOT EXISTS users (
-  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(255) DEFAULT NULL,
-  role ENUM('admin', 'editor', 'viewer') DEFAULT 'editor',
-  is_active TINYINT(1) DEFAULT 1,
-  last_activity DATETIME DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `email` VARCHAR(255) NOT NULL UNIQUE,
+  `name` VARCHAR(255) DEFAULT NULL,
+  `role` ENUM('admin', 'editor', 'viewer') DEFAULT 'editor',
+  `is_active` TINYINT(1) DEFAULT 1,
+  `last_activity` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-  INDEX idx_email (email),
-  INDEX idx_role (role)
+  INDEX `idx_email` (`email`),
+  INDEX `idx_role` (`role`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Daftar user yang mengakses sheet';
@@ -86,17 +87,17 @@ CREATE TABLE IF NOT EXISTS users (
 -- 📈 TABLE: statistics (opsional - untuk dashboard)
 -- ========================================
 
-CREATE TABLE IF NOT EXISTS daily_statistics (
-  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  date DATE NOT NULL,
-  sheet_name VARCHAR(255) NOT NULL,
-  user_email VARCHAR(255) NOT NULL,
-  total_changes INT UNSIGNED DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS `daily_statistics` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `date` DATE NOT NULL,
+  `sheet_name` VARCHAR(255) NOT NULL,
+  `user_email` VARCHAR(255) NOT NULL,
+  `total_changes` INT UNSIGNED DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  UNIQUE KEY unique_daily_stat (date, sheet_name, user_email),
-  INDEX idx_date (date),
-  INDEX idx_sheet (sheet_name)
+  UNIQUE KEY `unique_daily_stat` (`date`, `sheet_name`, `user_email`),
+  INDEX `idx_date` (`date`),
+  INDEX `idx_sheet` (`sheet_name`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Statistik harian perubahan sheet';
@@ -105,19 +106,19 @@ CREATE TABLE IF NOT EXISTS daily_statistics (
 -- 🔐 TABLE: admin_users (untuk login dashboard)
 -- ========================================
 
-CREATE TABLE IF NOT EXISTS admin_users (
-  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(100) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL COMMENT 'Password hash (bcrypt)',
-  email VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  is_active TINYINT(1) DEFAULT 1,
-  last_login DATETIME DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS `admin_users` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(100) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL COMMENT 'Password hash (bcrypt)',
+  `email` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `last_login` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-  INDEX idx_username (username),
-  INDEX idx_email (email)
+  INDEX `idx_username` (`username`),
+  INDEX `idx_email` (`email`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Admin users untuk akses dashboard';
@@ -128,7 +129,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
 -- Username: admin
 -- Password: admin123 (GANTI SETELAH INSTALL!)
 
-INSERT INTO admin_users (username, password, email, name) VALUES
+INSERT INTO `admin_users` (`username`, `password`, `email`, `name`) VALUES
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@example.com', 'Administrator');
 
 -- Password hash untuk 'admin123' - WAJIB GANTI setelah install!
@@ -138,52 +139,52 @@ INSERT INTO admin_users (username, password, email, name) VALUES
 -- ========================================
 
 -- View untuk melihat perubahan terbaru dengan info lengkap
-CREATE OR REPLACE VIEW v_recent_changes AS
+CREATE OR REPLACE VIEW `v_recent_changes` AS
 SELECT
-  cl.id,
-  cl.spreadsheet_name,
-  cl.sheet_name,
-  cl.user_email,
-  cl.changed_at,
-  CONCAT(cl.column_name, cl.row_number) AS cell,
-  cl.old_value,
-  cl.new_value,
-  cl.client_name,
-  cl.kit_number,
+  cl.`id`,
+  cl.`spreadsheet_name`,
+  cl.`sheet_name`,
+  cl.`user_email`,
+  cl.`changed_at`,
+  CONCAT(cl.`column_name`, cl.`row_num`) AS `cell`,
+  cl.`old_value`,
+  cl.`new_value`,
+  cl.`client_name`,
+  cl.`kit_number`,
   CASE
-    WHEN cl.old_value = '' OR cl.old_value IS NULL THEN 'INSERT'
-    WHEN cl.new_value = '' OR cl.new_value IS NULL THEN 'DELETE'
+    WHEN cl.`old_value` = '' OR cl.`old_value` IS NULL THEN 'INSERT'
+    WHEN cl.`new_value` = '' OR cl.`new_value` IS NULL THEN 'DELETE'
     ELSE 'UPDATE'
-  END AS change_type,
-  TIMESTAMPDIFF(HOUR, cl.changed_at, NOW()) AS hours_ago
-FROM change_logs cl
-ORDER BY cl.changed_at DESC;
+  END AS `change_type`,
+  TIMESTAMPDIFF(HOUR, cl.`changed_at`, NOW()) AS `hours_ago`
+FROM `change_logs` cl
+ORDER BY cl.`changed_at` DESC;
 
 -- View untuk statistik per user
-CREATE OR REPLACE VIEW v_user_statistics AS
+CREATE OR REPLACE VIEW `v_user_statistics` AS
 SELECT
-  user_email,
-  COUNT(*) AS total_changes,
-  COUNT(DISTINCT sheet_name) AS sheets_modified,
-  COUNT(DISTINCT DATE(changed_at)) AS active_days,
-  MAX(changed_at) AS last_activity,
-  MIN(changed_at) AS first_activity
-FROM change_logs
-GROUP BY user_email
-ORDER BY total_changes DESC;
+  `user_email`,
+  COUNT(*) AS `total_changes`,
+  COUNT(DISTINCT `sheet_name`) AS `sheets_modified`,
+  COUNT(DISTINCT DATE(`changed_at`)) AS `active_days`,
+  MAX(`changed_at`) AS `last_activity`,
+  MIN(`changed_at`) AS `first_activity`
+FROM `change_logs`
+GROUP BY `user_email`
+ORDER BY `total_changes` DESC;
 
 -- View untuk statistik per sheet
-CREATE OR REPLACE VIEW v_sheet_statistics AS
+CREATE OR REPLACE VIEW `v_sheet_statistics` AS
 SELECT
-  sheet_name,
-  COUNT(*) AS total_changes,
-  COUNT(DISTINCT user_email) AS unique_users,
-  COUNT(DISTINCT DATE(changed_at)) AS active_days,
-  MAX(changed_at) AS last_modified,
-  MIN(changed_at) AS first_modified
-FROM change_logs
-GROUP BY sheet_name
-ORDER BY total_changes DESC;
+  `sheet_name`,
+  COUNT(*) AS `total_changes`,
+  COUNT(DISTINCT `user_email`) AS `unique_users`,
+  COUNT(DISTINCT DATE(`changed_at`)) AS `active_days`,
+  MAX(`changed_at`) AS `last_modified`,
+  MIN(`changed_at`) AS `first_modified`
+FROM `change_logs`
+GROUP BY `sheet_name`
+ORDER BY `total_changes` DESC;
 
 -- ========================================
 -- 🧹 STORED PROCEDURE: Cleanup Old Logs
@@ -192,10 +193,10 @@ ORDER BY total_changes DESC;
 
 DELIMITER //
 
-CREATE PROCEDURE cleanup_old_logs(IN days_to_keep INT)
+CREATE PROCEDURE `cleanup_old_logs`(IN days_to_keep INT)
 BEGIN
-  DELETE FROM change_logs
-  WHERE changed_at < DATE_SUB(NOW(), INTERVAL days_to_keep DAY);
+  DELETE FROM `change_logs`
+  WHERE `changed_at` < DATE_SUB(NOW(), INTERVAL days_to_keep DAY);
 
   SELECT ROW_COUNT() AS deleted_rows;
 END //
