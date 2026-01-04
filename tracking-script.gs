@@ -1,8 +1,8 @@
 // ========================================
-// 📊 GOOGLE SHEET CHANGE TRACKING SYSTEM
+// 🚀 STARLINK MANAGEMENT SYSTEM - CHANGE TRACKING
 // ========================================
 // Script untuk tracking semua perubahan di Google Sheet
-// dan mengirim data ke database eksternal via API
+// FIXED: Proper handling untuk tanggal dan format data
 
 // ========================================
 // 🔧 KONFIGURASI
@@ -56,8 +56,32 @@ function onEditTracking(e) {
     var row = e.range.getRow();
     var column = e.range.getColumn();
     var columnName = getColumnLetter(column);
-    var oldValue = e.oldValue || '';
-    var newValue = e.value || '';
+
+    // ========================================
+    // 🔧 FIXED: Handle tanggal dengan benar
+    // ========================================
+
+    var range = e.range;
+    var oldValue = '';
+    var newValue = '';
+
+    // Get formatted values (untuk tanggal akan jadi format readable)
+    try {
+      // Untuk old value, kita harus format manual karena e.oldValue bisa berupa serial number
+      if (e.oldValue !== undefined && e.oldValue !== null && e.oldValue !== '') {
+        oldValue = formatCellValue(e.oldValue, range);
+      }
+
+      // Untuk new value, ambil dari range yang sudah diformat
+      if (e.value !== undefined && e.value !== null && e.value !== '') {
+        newValue = formatCellValue(e.value, range);
+      }
+    } catch (formatError) {
+      Logger.log('⚠️ Format error: ' + formatError.message);
+      // Fallback ke toString
+      oldValue = (e.oldValue || '').toString();
+      newValue = (e.value || '').toString();
+    }
 
     // Jika nilai sama, skip (tidak ada perubahan)
     if (oldValue === newValue) {
@@ -67,8 +91,8 @@ function onEditTracking(e) {
 
     // Ambil informasi tambahan dari row yang diubah
     var rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
-    var clientName = rowData[0] || ''; // Kolom A: Nama
-    var kitNumber = rowData[8] || ''; // Kolom I: KIT Number
+    var clientName = formatValue(rowData[0]); // Kolom A: Nama
+    var kitNumber = formatValue(rowData[8]); // Kolom I: KIT Number
 
     // Buat objek data tracking
     var trackingData = {
@@ -80,10 +104,10 @@ function onEditTracking(e) {
       row_number: row,
       column_number: column,
       column_name: columnName,
-      old_value: oldValue.toString().substring(0, 1000), // Limit 1000 karakter
-      new_value: newValue.toString().substring(0, 1000),
-      client_name: clientName.toString().substring(0, 255),
-      kit_number: kitNumber.toString().substring(0, 100)
+      old_value: oldValue.substring(0, 1000), // Limit 1000 karakter
+      new_value: newValue.substring(0, 1000),
+      client_name: clientName.substring(0, 255),
+      kit_number: kitNumber.substring(0, 100)
     };
 
     Logger.log('📊 Tracking change:');
@@ -101,6 +125,62 @@ function onEditTracking(e) {
     Logger.log('Stack: ' + error.stack);
     // Jangan throw error agar tidak mengganggu user edit
   }
+}
+
+// ========================================
+// 🔧 HELPER: Format Cell Value
+// ========================================
+
+/**
+ * Format cell value dengan benar, termasuk tanggal
+ */
+function formatCellValue(value, range) {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  // Cek apakah ini adalah tanggal (serial number)
+  if (typeof value === 'number') {
+    // Coba parse sebagai tanggal
+    try {
+      var dateValue = new Date((value - 25569) * 86400 * 1000); // Convert Excel serial to Date
+
+      // Validasi apakah ini benar-benar tanggal yang valid
+      if (!isNaN(dateValue.getTime())) {
+        // Cek apakah nilai asli > 1 (tanggal serial biasanya > 40000)
+        if (value > 1 && value < 100000) {
+          // Format sebagai tanggal Indonesia
+          return Utilities.formatDate(dateValue, 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
+        }
+      }
+    } catch (dateError) {
+      Logger.log('⚠️ Date parse error: ' + dateError.message);
+    }
+  }
+
+  // Jika value adalah Date object
+  if (value instanceof Date) {
+    return Utilities.formatDate(value, 'Asia/Jakarta', 'dd/MM/yyyy HH:mm:ss');
+  }
+
+  // Untuk value lainnya, convert ke string
+  return value.toString();
+}
+
+/**
+ * Format generic value (untuk client name, kit number, dll)
+ */
+function formatValue(value) {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  // Jika Date, format ke string
+  if (value instanceof Date) {
+    return Utilities.formatDate(value, 'Asia/Jakarta', 'dd/MM/yyyy');
+  }
+
+  return value.toString();
 }
 
 // ========================================
@@ -204,16 +284,41 @@ function testTracking() {
     user_email: 'test@example.com',
     timestamp: Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyy-MM-dd HH:mm:ss'),
     row_number: 5,
-    column_number: 12,
-    column_name: 'L',
-    old_value: 'Data Lama',
-    new_value: 'Data Baru',
+    column_number: 11,
+    column_name: 'K',
+    old_value: '15/12/2024',
+    new_value: '20/12/2024',
     client_name: 'Test Client',
     kit_number: 'KIT-123456'
   };
 
   Logger.log('🧪 Testing tracking system...');
   sendToTrackingAPI(testData);
+}
+
+/**
+ * Test format tanggal
+ */
+function testDateFormat() {
+  // Test dengan serial number
+  var serialNumber = 45321; // Tanggal dalam format serial
+  Logger.log('Serial: ' + serialNumber);
+  Logger.log('Formatted: ' + formatCellValue(serialNumber, null));
+
+  // Test dengan Date object
+  var dateObj = new Date();
+  Logger.log('Date object: ' + dateObj);
+  Logger.log('Formatted: ' + formatCellValue(dateObj, null));
+
+  // Test dengan string
+  var stringValue = 'Test String';
+  Logger.log('String: ' + stringValue);
+  Logger.log('Formatted: ' + formatCellValue(stringValue, null));
+
+  // Test dengan number biasa
+  var normalNumber = 123;
+  Logger.log('Normal number: ' + normalNumber);
+  Logger.log('Formatted: ' + formatCellValue(normalNumber, null));
 }
 
 /**
@@ -289,15 +394,17 @@ function getColumnNumberFromLetter(letter) {
  *    - Event type: On edit
  *    - Klik Save
  * 4. Authorize script saat diminta
- * 5. Test dengan edit cell di sheet
+ * 5. Test dengan edit cell di sheet (termasuk tanggal!)
  *
  * TROUBLESHOOTING:
  * - Cek log: View > Logs
  * - Test manual: Run function testTracking()
+ * - Test format tanggal: Run function testDateFormat()
  * - Lihat fallback log: Sheet "_Tracking_Log" jika API gagal
  *
  * CATATAN:
  * - Trigger onEdit punya quota limit (30 detik execution time)
  * - Jika edit banyak cell sekaligus, akan tercatat per cell
  * - Data disimpan di fallback log jika API timeout/error
+ * - Format tanggal otomatis dikonversi ke dd/MM/yyyy HH:mm:ss
  */
