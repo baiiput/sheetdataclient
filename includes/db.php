@@ -96,11 +96,11 @@ class Database {
     }
 
     public function fetchAll($sql, $params = []) {
-        return $this->query($sql, $params)->fetchAll();
+        return $this->query($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function fetchOne($sql, $params = []) {
-        return $this->query($sql, $params)->fetch();
+        return $this->query($sql, $params)->fetch(PDO::FETCH_ASSOC);
     }
 
     public function count($table, $where = '1=1', $params = []) {
