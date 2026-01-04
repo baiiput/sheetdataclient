@@ -1,0 +1,203 @@
+========================================
+📊 SHEET TRACKING SYSTEM - QUICK INSTALL
+========================================
+
+📋 CHECKLIST INSTALASI:
+
+☐ 1. SETUP DATABASE
+   - Import database.sql ke MySQL
+   - Buat user database (opsional tapi recommended)
+   - Verifikasi tabel sudah dibuat
+
+☐ 2. KONFIGURASI WEB
+   - Upload semua file ke VPS
+   - Edit includes/config.php (DB credentials)
+   - Set permission folder logs (775)
+   - Test akses: https://yourdomain.com/login.php
+
+☐ 3. SETUP APPS SCRIPT
+   - Copy tracking-script.gs ke Google Apps Script
+   - Ganti TRACKING_API_URL dengan URL VPS Anda
+   - Install trigger (On edit)
+   - Test dengan function testTracking()
+
+☐ 4. VERIFIKASI
+   - Login ke dashboard (admin/admin123)
+   - Edit cell di Google Sheet
+   - Refresh dashboard, perubahan harus muncul
+
+========================================
+🚀 INSTALASI DETAIL
+========================================
+
+1️⃣ DATABASE SETUP
+------------------
+
+Login ke MySQL:
+$ mysql -u root -p
+
+Import database:
+$ mysql -u root -p < database.sql
+
+Buat user (recommended):
+CREATE USER 'sheet_tracker'@'localhost' IDENTIFIED BY 'YOUR_STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON sheet_tracking.* TO 'sheet_tracker'@'localhost';
+FLUSH PRIVILEGES;
+
+Verifikasi:
+USE sheet_tracking;
+SHOW TABLES;
+
+
+2️⃣ WEB DASHBOARD SETUP
+-----------------------
+
+Upload file via FTP/SFTP ke:
+/www/wwwroot/tracking.yourdomain.com/
+
+Edit konfigurasi:
+$ nano includes/config.php
+
+Ubah:
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'sheet_tracking');
+define('DB_USER', 'sheet_tracker');
+define('DB_PASS', 'YOUR_PASSWORD');  # ← GANTI INI!
+
+Set permission:
+$ chmod 755 /www/wwwroot/tracking.yourdomain.com
+$ chmod 644 *.php
+$ chmod 644 includes/*.php
+$ chmod 644 api/*.php
+$ mkdir logs
+$ chmod 775 logs
+
+
+3️⃣ APPS SCRIPT SETUP
+---------------------
+
+1. Buka Google Sheet
+2. Extensions → Apps Script
+3. Buat file baru: TrackingSystem
+4. Copy-paste tracking-script.gs
+5. GANTI URL di baris 11:
+
+   const TRACKING_API_URL = 'https://yourdomain.com/api/track-change.php';
+                              ↑↑↑ GANTI DENGAN DOMAIN VPS ANDA!
+
+6. Save (Ctrl+S)
+7. Klik icon ⏰ (Triggers)
+8. Add Trigger:
+   - Function: onEditTracking
+   - Event: On edit
+   - Save & Authorize
+
+9. Test:
+   - Run function: testTracking
+   - Check Logs (View → Logs)
+
+
+4️⃣ TEST & VERIFIKASI
+---------------------
+
+Test Dashboard:
+1. Buka: https://yourdomain.com/login.php
+2. Login: admin / admin123
+3. Harus masuk ke dashboard
+
+Test Tracking:
+1. Buka Google Sheet
+2. Edit sembarang cell
+3. Tunggu 3-5 detik
+4. Refresh dashboard
+5. Perubahan harus muncul di tabel
+
+Jika tidak muncul:
+- Cek Apps Script Logs
+- Cek sheet _Tracking_Log (fallback)
+- Cek browser console
+- Cek error log VPS
+
+
+========================================
+🔧 TROUBLESHOOTING CEPAT
+========================================
+
+❌ Dashboard error 500
+   → Cek includes/config.php
+   → Cek kredensial database
+   → Cek error log: tail -f logs/app.log
+
+❌ Login tidak bisa
+   → Reset password:
+     UPDATE admin_users
+     SET password = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+     WHERE username = 'admin';
+     (password jadi: admin123)
+
+❌ Data tidak masuk
+   → Cek Apps Script Logs
+   → Cek URL API sudah benar?
+   → Cek trigger sudah terinstall?
+   → Test API: curl -X POST https://yourdomain.com/api/track-change.php
+
+❌ Sheet _Tracking_Log muncul
+   → Artinya Apps Script OK, tapi API gagal
+   → Cek URL API di tracking-script.gs
+   → Cek API endpoint bisa diakses
+   → Cek firewall VPS
+
+
+========================================
+⚠️ PENTING!
+========================================
+
+1. GANTI PASSWORD DEFAULT:
+   admin / admin123
+   ↓
+   Ganti setelah login pertama!
+
+2. GUNAKAN HTTPS:
+   Install SSL certificate di aaPanel
+
+3. BACKUP DATABASE:
+   mysqldump -u sheet_tracker -p sheet_tracking > backup.sql
+
+4. SET API KEY (opsional, tapi recommended):
+   Edit includes/config.php:
+   define('API_REQUIRE_AUTH', true);
+   define('API_KEY', 'your-secret-key-here');
+
+   Edit tracking-script.gs:
+   Tambah header 'X-API-Key' di sendToTrackingAPI()
+
+
+========================================
+📞 NEED HELP?
+========================================
+
+Cek:
+1. README.md (dokumentasi lengkap)
+2. Apps Script Logs (View → Logs)
+3. Browser Console (F12)
+4. VPS Error Logs
+5. Database connection
+
+Jika masih error:
+- Screenshot error message
+- Copy Apps Script logs
+- Copy browser console error
+
+
+========================================
+✅ SELESAI!
+========================================
+
+Sistem sudah siap digunakan.
+Setiap perubahan di Google Sheet akan tercatat otomatis.
+
+Login: https://yourdomain.com/login.php
+User: admin
+Pass: admin123 (GANTI SEGERA!)
+
+Happy Tracking! 📊
