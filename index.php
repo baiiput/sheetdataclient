@@ -1,14 +1,16 @@
 <?php
 // ========================================
-// 📊 DASHBOARD - CHANGE TRACKING SYSTEM
+// 📊 DASHBOARD - FIXED VERSION
 // ========================================
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require_once 'includes/config.php';
 require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
 requireLogin();
-
 $currentUser = getCurrentUser();
 
 // Handle logout
@@ -18,21 +20,7 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Handle export
-if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-    $filters = [
-        'sheet_name' => $_GET['sheet'] ?? '',
-        'user_email' => $_GET['user'] ?? '',
-        'date_from' => $_GET['date_from'] ?? '',
-        'date_to' => $_GET['date_to'] ?? '',
-        'search' => $_GET['search'] ?? ''
-    ];
-
-    $result = getChangeLogs($filters, 1, 10000); // Max 10k records
-    exportToCSV($result['logs'], 'change_logs_' . date('Y-m-d_His') . '.csv');
-}
-
-// Get filters from query string
+// Get filters
 $filters = [
     'sheet_name' => $_GET['sheet'] ?? '',
     'user_email' => $_GET['user'] ?? '',
@@ -55,9 +43,6 @@ $userEmails = getUserEmails();
 
 // Get statistics
 $stats = getDashboardStats();
-
-// Get daily activity
-$dailyActivity = getDailyActivityData(7);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -80,7 +65,7 @@ $dailyActivity = getDailyActivityData(7);
                 </div>
                 <div class="header-right">
                     <span class="user-info">
-                        👤 <?= e($currentUser['name']) ?>
+                        👤 <?= htmlspecialchars($currentUser['name'] ?? 'User') ?>
                     </span>
                     <a href="?logout=1" class="btn btn-sm btn-danger">
                         🚪 Logout
@@ -146,7 +131,7 @@ $dailyActivity = getDailyActivityData(7);
                                     name="search"
                                     class="form-control"
                                     placeholder="Cari nama client, KIT number, atau cell..."
-                                    value="<?= e($filters['search']) ?>"
+                                    value="<?= htmlspecialchars($filters['search']) ?>"
                                 >
                             </div>
 
@@ -156,8 +141,8 @@ $dailyActivity = getDailyActivityData(7);
                                 <select id="sheet" name="sheet" class="form-control">
                                     <option value="">Semua Sheet</option>
                                     <?php foreach ($sheetNames as $sheetName): ?>
-                                        <option value="<?= e($sheetName) ?>" <?= $filters['sheet_name'] === $sheetName ? 'selected' : '' ?>>
-                                            <?= e($sheetName) ?>
+                                        <option value="<?= htmlspecialchars($sheetName) ?>" <?= $filters['sheet_name'] === $sheetName ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sheetName) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -169,8 +154,8 @@ $dailyActivity = getDailyActivityData(7);
                                 <select id="user" name="user" class="form-control">
                                     <option value="">Semua User</option>
                                     <?php foreach ($userEmails as $userEmail): ?>
-                                        <option value="<?= e($userEmail) ?>" <?= $filters['user_email'] === $userEmail ? 'selected' : '' ?>>
-                                            <?= e($userEmail) ?>
+                                        <option value="<?= htmlspecialchars($userEmail) ?>" <?= $filters['user_email'] === $userEmail ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($userEmail) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -184,7 +169,7 @@ $dailyActivity = getDailyActivityData(7);
                                     id="date_from"
                                     name="date_from"
                                     class="form-control"
-                                    value="<?= e($filters['date_from']) ?>"
+                                    value="<?= htmlspecialchars($filters['date_from']) ?>"
                                 >
                             </div>
 
@@ -196,7 +181,7 @@ $dailyActivity = getDailyActivityData(7);
                                     id="date_to"
                                     name="date_to"
                                     class="form-control"
-                                    value="<?= e($filters['date_to']) ?>"
+                                    value="<?= htmlspecialchars($filters['date_to']) ?>"
                                 >
                             </div>
 
@@ -265,36 +250,32 @@ $dailyActivity = getDailyActivityData(7);
                                 <tbody>
                                     <?php foreach ($logs as $log): ?>
                                         <tr>
-                                            <td><?= e($log['id']) ?></td>
+                                            <td><?= htmlspecialchars($log['id']) ?></td>
                                             <td class="text-nowrap">
-                                                <div><?= formatDate($log['changed_at'], 'd/m/Y') ?></div>
-                                                <small class="text-muted"><?= formatDate($log['changed_at'], 'H:i:s') ?></small>
-                                                <small class="text-muted d-block"><?= timeAgo($log['changed_at']) ?></small>
+                                                <?php
+                                                $datetime = new DateTime($log['changed_at']);
+                                                echo $datetime->format('d/m/Y');
+                                                echo '<br><small class="text-muted">';
+                                                echo $datetime->format('H:i:s');
+                                                echo '</small>';
+                                                ?>
                                             </td>
-                                            <td class="text-truncate" title="<?= e($log['user_email']) ?>">
-                                                <?= e(truncate($log['user_email'], 25)) ?>
-                                            </td>
+                                            <td><?= htmlspecialchars($log['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
-                                                    <?= e($log['sheet_name']) ?>
+                                                    <?= htmlspecialchars($log['sheet_name']) ?>
                                                 </span>
                                             </td>
                                             <td>
-                                                <code><?= e($log['cell_address']) ?></code>
+                                                <code><?= htmlspecialchars($log['cell_address']) ?></code>
                                             </td>
-                                            <td class="text-truncate" title="<?= e($log['old_value']) ?>">
-                                                <?= e(truncate($log['old_value'] ?? '-', 30)) ?>
-                                            </td>
-                                            <td class="text-truncate" title="<?= e($log['new_value']) ?>">
-                                                <?= e(truncate($log['new_value'] ?? '-', 30)) ?>
-                                            </td>
-                                            <td class="text-truncate" title="<?= e($log['client_name']) ?>">
-                                                <?= e(truncate($log['client_name'] ?? '-', 20)) ?>
-                                            </td>
-                                            <td><?= e($log['kit_number'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($log['old_value'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($log['new_value'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($log['kit_number'] ?? '-') ?></td>
                                             <td>
-                                                <span class="badge <?= getChangeTypeBadge($log['old_value'], $log['new_value']) ?>">
-                                                    <?= getChangeTypeLabel($log['old_value'], $log['new_value']) ?>
+                                                <span class="badge badge-warning">
+                                                    UPDATE
                                                 </span>
                                             </td>
                                         </tr>
