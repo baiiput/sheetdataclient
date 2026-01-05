@@ -214,8 +214,17 @@ function getChangeLogs($filters = [], $page = 1, $perPage = null) {
         }
 
         if (!empty($filters['search'])) {
-            $where[] = '(`client_name` LIKE :search OR `kit_number` LIKE :search OR `cell_address` LIKE :search)';
-            $params['search'] = '%' . $filters['search'] . '%';
+            $searchTerm = '%' . $filters['search'] . '%';
+            $where[] = '(
+                `client_name` LIKE :search
+                OR `kit_number` LIKE :search
+                OR `cell_address` LIKE :search
+                OR `user_email` LIKE :search
+                OR `sheet_name` LIKE :search
+                OR `old_value` LIKE :search
+                OR `new_value` LIKE :search
+            )';
+            $params['search'] = $searchTerm;
         }
 
         $whereClause = implode(' AND ', $where);
