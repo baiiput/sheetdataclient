@@ -62,15 +62,7 @@ try {
     $where = ['1=1'];
     $params = [];
 
-    $where[] = '(
-        `client_name` LIKE :search
-        OR `kit_number` LIKE :search
-        OR `cell_address` LIKE :search
-        OR `user_email` LIKE :search
-        OR `sheet_name` LIKE :search
-        OR `old_value` LIKE :search
-        OR `new_value` LIKE :search
-    )';
+    $where[] = '(`client_name` LIKE :search OR `kit_number` LIKE :search OR `cell_address` LIKE :search OR `user_email` LIKE :search OR `sheet_name` LIKE :search OR `old_value` LIKE :search OR `new_value` LIKE :search)';
     $params['search'] = '%' . $searchTerm . '%';
 
     $whereClause = implode(' AND ', $where);
@@ -78,7 +70,7 @@ try {
     echo "WHERE clause: $whereClause\n";
     echo "Parameters: " . print_r($params, true) . "\n";
 
-    $totalMatches = $db->count('`change_logs`', $whereClause, $params);
+    $totalMatches = $db->count('change_logs', $whereClause, $params);
     echo "Total matches: $totalMatches\n\n";
 
     // Test 5: Get actual results
