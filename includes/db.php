@@ -104,6 +104,10 @@ class Database {
     }
 
     public function count($table, $where = '1=1', $params = []) {
+        // Add backticks if not already present
+        if (strpos($table, '`') === false) {
+            $table = "`{$table}`";
+        }
         $sql = "SELECT COUNT(*) as total FROM {$table} WHERE {$where}";
         $result = $this->fetchOne($sql, $params);
         return (int) $result['total'];

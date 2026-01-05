@@ -215,22 +215,14 @@ function getChangeLogs($filters = [], $page = 1, $perPage = null) {
 
         if (!empty($filters['search'])) {
             $searchTerm = '%' . $filters['search'] . '%';
-            $where[] = '(
-                `client_name` LIKE :search
-                OR `kit_number` LIKE :search
-                OR `cell_address` LIKE :search
-                OR `user_email` LIKE :search
-                OR `sheet_name` LIKE :search
-                OR `old_value` LIKE :search
-                OR `new_value` LIKE :search
-            )';
+            $where[] = '(`client_name` LIKE :search OR `kit_number` LIKE :search OR `cell_address` LIKE :search OR `user_email` LIKE :search OR `sheet_name` LIKE :search OR `old_value` LIKE :search OR `new_value` LIKE :search)';
             $params['search'] = $searchTerm;
         }
 
         $whereClause = implode(' AND ', $where);
 
         // Get total count
-        $totalRecords = $db->count('`change_logs`', $whereClause, $params);
+        $totalRecords = $db->count('change_logs', $whereClause, $params);
 
         // Get pagination
         $pagination = getPagination($totalRecords, $page, $perPage);
@@ -305,16 +297,16 @@ function getDashboardStats() {
         $db = Database::getInstance();
 
         // Total changes
-        $totalChanges = $db->count('`change_logs`');
+        $totalChanges = $db->count('change_logs');
 
         // Changes today
-        $changesToday = $db->count('`change_logs`', 'DATE(`changed_at`) = CURDATE()');
+        $changesToday = $db->count('change_logs', 'DATE(`changed_at`) = CURDATE()');
 
         // Changes this week
-        $changesThisWeek = $db->count('`change_logs`', 'YEARWEEK(`changed_at`) = YEARWEEK(NOW())');
+        $changesThisWeek = $db->count('change_logs', 'YEARWEEK(`changed_at`) = YEARWEEK(NOW())');
 
         // Changes this month
-        $changesThisMonth = $db->count('`change_logs`', 'YEAR(`changed_at`) = YEAR(NOW()) AND MONTH(`changed_at`) = MONTH(NOW())');
+        $changesThisMonth = $db->count('change_logs', 'YEAR(`changed_at`) = YEAR(NOW()) AND MONTH(`changed_at`) = MONTH(NOW())');
 
         // Unique users
         $uniqueUsers = $db->fetchOne("SELECT COUNT(DISTINCT `user_email`) as total FROM `change_logs`")['total'] ?? 0;
