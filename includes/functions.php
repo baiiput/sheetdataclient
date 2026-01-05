@@ -181,134 +181,181 @@ function getPagination($totalRecords, $page = 1, $perPage = null) {
  * Get all change logs with filters
  */
 function getChangeLogs($filters = [], $page = 1, $perPage = null) {
-    $db = Database::getInstance();
-    $perPage = $perPage ?? RECORDS_PER_PAGE;
+    try {
+        $db = Database::getInstance();
+        $perPage = $perPage ?? RECORDS_PER_PAGE;
 
-    // Build WHERE clause
-    $where = ['1=1'];
-    $params = [];
+        // Ensure $page is valid
+        $page = max(1, (int)$page);
+        $perPage = max(1, min(1000, (int)$perPage)); // Max 1000 records per page
 
-    if (!empty($filters['sheet_name'])) {
-        $where[] = 'sheet_name = :sheet_name';
-        $params['sheet_name'] = $filters['sheet_name'];
+        // Build WHERE clause
+        $where = ['1=1'];
+        $params = [];
+
+        if (!empty($filters['sheet_name'])) {
+            $where[] = '`sheet_name` = :sheet_name';
+            $params['sheet_name'] = $filters['sheet_name'];
+        }
+
+        if (!empty($filters['user_email'])) {
+            $where[] = '`user_email` = :user_email';
+            $params['user_email'] = $filters['user_email'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $where[] = 'DATE(`changed_at`) >= :date_from';
+            $params['date_from'] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $where[] = 'DATE(`changed_at`) <= :date_to';
+            $params['date_to'] = $filters['date_to'];
+        }
+
+        if (!empty($filters['search'])) {
+            $where[] = '(`client_name` LIKE :search OR `kit_number` LIKE :search OR `cell_address` LIKE :search)';
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        // Get total count
+        $totalRecords = $db->count('`change_logs`', $whereClause, $params);
+
+        // Get pagination
+        $pagination = getPagination($totalRecords, $page, $perPage);
+
+        // Get data
+        $sql = "SELECT * FROM `change_logs`
+                WHERE {$whereClause}
+                ORDER BY `changed_at` DESC
+                LIMIT {$pagination['per_page']} OFFSET {$pagination['offset']}";
+
+        $logs = $db->fetchAll($sql, $params);
+
+        return [
+            'logs' => $logs ?? [],
+            'pagination' => $pagination
+        ];
+    } catch (Exception $e) {
+        // Log error
+        error_log("Error in getChangeLogs: " . $e->getMessage());
+
+        // Return empty result
+        return [
+            'logs' => [],
+            'pagination' => [
+                'total_records' => 0,
+                'per_page' => $perPage ?? RECORDS_PER_PAGE,
+                'current_page' => 1,
+                'total_pages' => 1,
+                'offset' => 0,
+                'has_prev' => false,
+                'has_next' => false
+            ]
+        ];
     }
-
-    if (!empty($filters['user_email'])) {
-        $where[] = 'user_email = :user_email';
-        $params['user_email'] = $filters['user_email'];
-    }
-
-    if (!empty($filters['date_from'])) {
-        $where[] = 'DATE(changed_at) >= :date_from';
-        $params['date_from'] = $filters['date_from'];
-    }
-
-    if (!empty($filters['date_to'])) {
-        $where[] = 'DATE(changed_at) <= :date_to';
-        $params['date_to'] = $filters['date_to'];
-    }
-
-    if (!empty($filters['search'])) {
-        $where[] = '(client_name LIKE :search OR kit_number LIKE :search OR cell_address LIKE :search)';
-        $params['search'] = '%' . $filters['search'] . '%';
-    }
-
-    $whereClause = implode(' AND ', $where);
-
-    // Get total count
-    $totalRecords = $db->count('change_logs', $whereClause, $params);
-
-    // Get pagination
-    $pagination = getPagination($totalRecords, $page, $perPage);
-
-    // Get data
-    $sql = "SELECT * FROM change_logs
-            WHERE {$whereClause}
-            ORDER BY changed_at DESC
-            LIMIT {$pagination['per_page']} OFFSET {$pagination['offset']}";
-
-    $logs = $db->fetchAll($sql, $params);
-
-    return [
-        'logs' => $logs,
-        'pagination' => $pagination
-    ];
 }
 
 /**
  * Get unique sheet names
  */
 function getSheetNames() {
-    $db = Database::getInstance();
-    $sql = "SELECT DISTINCT sheet_name FROM change_logs ORDER BY sheet_name";
-    $results = $db->fetchAll($sql);
-    return array_column($results, 'sheet_name');
+    try {
+        $db = Database::getInstance();
+        $sql = "SELECT DISTINCT `sheet_name` FROM `change_logs` WHERE `sheet_name` IS NOT NULL AND `sheet_name` != '' ORDER BY `sheet_name`";
+        $results = $db->fetchAll($sql);
+        return array_column($results, 'sheet_name');
+    } catch (Exception $e) {
+        error_log("Error in getSheetNames: " . $e->getMessage());
+        return [];
+    }
 }
 
 /**
  * Get unique user emails
  */
 function getUserEmails() {
-    $db = Database::getInstance();
-    $sql = "SELECT DISTINCT user_email FROM change_logs ORDER BY user_email";
-    $results = $db->fetchAll($sql);
-    return array_column($results, 'user_email');
+    try {
+        $db = Database::getInstance();
+        $sql = "SELECT DISTINCT `user_email` FROM `change_logs` WHERE `user_email` IS NOT NULL AND `user_email` != '' ORDER BY `user_email`";
+        $results = $db->fetchAll($sql);
+        return array_column($results, 'user_email');
+    } catch (Exception $e) {
+        error_log("Error in getUserEmails: " . $e->getMessage());
+        return [];
+    }
 }
 
 /**
  * Get dashboard statistics
  */
 function getDashboardStats() {
-    $db = Database::getInstance();
+    try {
+        $db = Database::getInstance();
 
-    // Total changes
-    $totalChanges = $db->count('change_logs');
+        // Total changes
+        $totalChanges = $db->count('`change_logs`');
 
-    // Changes today
-    $changesToday = $db->count('change_logs', 'DATE(changed_at) = CURDATE()');
+        // Changes today
+        $changesToday = $db->count('`change_logs`', 'DATE(`changed_at`) = CURDATE()');
 
-    // Changes this week
-    $changesThisWeek = $db->count('change_logs', 'YEARWEEK(changed_at) = YEARWEEK(NOW())');
+        // Changes this week
+        $changesThisWeek = $db->count('`change_logs`', 'YEARWEEK(`changed_at`) = YEARWEEK(NOW())');
 
-    // Changes this month
-    $changesThisMonth = $db->count('change_logs', 'YEAR(changed_at) = YEAR(NOW()) AND MONTH(changed_at) = MONTH(NOW())');
+        // Changes this month
+        $changesThisMonth = $db->count('`change_logs`', 'YEAR(`changed_at`) = YEAR(NOW()) AND MONTH(`changed_at`) = MONTH(NOW())');
 
-    // Unique users
-    $uniqueUsers = $db->fetchOne("SELECT COUNT(DISTINCT user_email) as total FROM change_logs")['total'];
+        // Unique users
+        $uniqueUsers = $db->fetchOne("SELECT COUNT(DISTINCT `user_email`) as total FROM `change_logs`")['total'] ?? 0;
 
-    // Unique sheets
-    $uniqueSheets = $db->fetchOne("SELECT COUNT(DISTINCT sheet_name) as total FROM change_logs")['total'];
+        // Unique sheets
+        $uniqueSheets = $db->fetchOne("SELECT COUNT(DISTINCT `sheet_name`) as total FROM `change_logs`")['total'] ?? 0;
 
-    // Most active user today
-    $mostActiveUser = $db->fetchOne(
-        "SELECT user_email, COUNT(*) as total
-         FROM change_logs
-         WHERE DATE(changed_at) = CURDATE()
-         GROUP BY user_email
-         ORDER BY total DESC
-         LIMIT 1"
-    );
+        // Most active user today
+        $mostActiveUser = $db->fetchOne(
+            "SELECT `user_email`, COUNT(*) as total
+             FROM `change_logs`
+             WHERE DATE(`changed_at`) = CURDATE()
+             GROUP BY `user_email`
+             ORDER BY total DESC
+             LIMIT 1"
+        );
 
-    // Most modified sheet today
-    $mostModifiedSheet = $db->fetchOne(
-        "SELECT sheet_name, COUNT(*) as total
-         FROM change_logs
-         WHERE DATE(changed_at) = CURDATE()
-         GROUP BY sheet_name
-         ORDER BY total DESC
-         LIMIT 1"
-    );
+        // Most modified sheet today
+        $mostModifiedSheet = $db->fetchOne(
+            "SELECT `sheet_name`, COUNT(*) as total
+             FROM `change_logs`
+             WHERE DATE(`changed_at`) = CURDATE()
+             GROUP BY `sheet_name`
+             ORDER BY total DESC
+             LIMIT 1"
+        );
 
-    return [
-        'total_changes' => $totalChanges,
-        'changes_today' => $changesToday,
-        'changes_this_week' => $changesThisWeek,
-        'changes_this_month' => $changesThisMonth,
-        'unique_users' => $uniqueUsers,
-        'unique_sheets' => $uniqueSheets,
-        'most_active_user' => $mostActiveUser,
-        'most_modified_sheet' => $mostModifiedSheet
-    ];
+        return [
+            'total_changes' => $totalChanges,
+            'changes_today' => $changesToday,
+            'changes_this_week' => $changesThisWeek,
+            'changes_this_month' => $changesThisMonth,
+            'unique_users' => $uniqueUsers,
+            'unique_sheets' => $uniqueSheets,
+            'most_active_user' => $mostActiveUser,
+            'most_modified_sheet' => $mostModifiedSheet
+        ];
+    } catch (Exception $e) {
+        error_log("Error in getDashboardStats: " . $e->getMessage());
+        return [
+            'total_changes' => 0,
+            'changes_today' => 0,
+            'changes_this_week' => 0,
+            'changes_this_month' => 0,
+            'unique_users' => 0,
+            'unique_sheets' => 0,
+            'most_active_user' => null,
+            'most_modified_sheet' => null
+        ];
+    }
 }
 
 /**
