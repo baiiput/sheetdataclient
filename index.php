@@ -20,12 +20,15 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
-// Get filters
+// Get filters with default to current month
+$defaultDateFrom = date('Y-m-01'); // First day of current month
+$defaultDateTo = date('Y-m-t');    // Last day of current month
+
 $filters = [
     'sheet_name' => $_GET['sheet'] ?? '',
     'user_email' => $_GET['user'] ?? '',
-    'date_from' => $_GET['date_from'] ?? '',
-    'date_to' => $_GET['date_to'] ?? '',
+    'date_from' => $_GET['date_from'] ?? $defaultDateFrom,
+    'date_to' => $_GET['date_to'] ?? $defaultDateTo,
     'search' => $_GET['search'] ?? ''
 ];
 
