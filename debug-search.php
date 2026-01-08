@@ -62,8 +62,15 @@ try {
     $where = ['1=1'];
     $params = [];
 
-    $where[] = '(`client_name` LIKE :search OR `kit_number` LIKE :search OR `cell_address` LIKE :search OR `user_email` LIKE :search OR `sheet_name` LIKE :search OR `old_value` LIKE :search OR `new_value` LIKE :search)';
-    $params['search'] = '%' . $searchTerm . '%';
+    $searchValue = '%' . $searchTerm . '%';
+    $where[] = '(`client_name` LIKE :search1 OR `kit_number` LIKE :search2 OR `cell_address` LIKE :search3 OR `user_email` LIKE :search4 OR `sheet_name` LIKE :search5 OR `old_value` LIKE :search6 OR `new_value` LIKE :search7)';
+    $params['search1'] = $searchValue;
+    $params['search2'] = $searchValue;
+    $params['search3'] = $searchValue;
+    $params['search4'] = $searchValue;
+    $params['search5'] = $searchValue;
+    $params['search6'] = $searchValue;
+    $params['search7'] = $searchValue;
 
     $whereClause = implode(' AND ', $where);
 
