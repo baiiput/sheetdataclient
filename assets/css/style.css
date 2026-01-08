@@ -27,7 +27,75 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 
-    /* Modern Accent Colors - Blue/Purple Gradient Theme */
+    /* ======================================
+       🎨 COLOR PALETTE OPTIONS
+       Uncomment salah satu palette di bawah ini!
+       ====================================== */
+
+    /* OPTION 1: Ocean Blue (Default) - Fresh & Professional */
+    --color-primary: #0ea5e9;
+    --color-primary-hover: #0284c7;
+    --color-primary-light: #38bdf8;
+    --color-success: #10b981;
+    --color-success-hover: #059669;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-warning: #f59e0b;
+    --color-warning-hover: #d97706;
+    --color-info: #06b6d4;
+    --color-secondary: #64748b;
+    --color-secondary-hover: #475569;
+    --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+
+    /* OPTION 2: Emerald Green - Natural & Calm
+    --color-primary: #10b981;
+    --color-primary-hover: #059669;
+    --color-primary-light: #34d399;
+    --color-success: #22c55e;
+    --color-success-hover: #16a34a;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-warning: #f59e0b;
+    --color-warning-hover: #d97706;
+    --color-info: #14b8a6;
+    --color-secondary: #64748b;
+    --color-secondary-hover: #475569;
+    --gradient-primary: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+    */
+
+    /* OPTION 3: Sunset Orange - Warm & Energetic
+    --color-primary: #f97316;
+    --color-primary-hover: #ea580c;
+    --color-primary-light: #fb923c;
+    --color-success: #10b981;
+    --color-success-hover: #059669;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-warning: #f59e0b;
+    --color-warning-hover: #d97706;
+    --color-info: #f59e0b;
+    --color-secondary: #64748b;
+    --color-secondary-hover: #475569;
+    --gradient-primary: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+    */
+
+    /* OPTION 4: Modern Teal - Cool & Modern
+    --color-primary: #06b6d4;
+    --color-primary-hover: #0891b2;
+    --color-primary-light: #22d3ee;
+    --color-success: #10b981;
+    --color-success-hover: #059669;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-warning: #f59e0b;
+    --color-warning-hover: #d97706;
+    --color-info: #14b8a6;
+    --color-secondary: #64748b;
+    --color-secondary-hover: #475569;
+    --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    */
+
+    /* OPTION 5: Purple Gradient (Previous) - Elegant & Modern
     --color-primary: #6366f1;
     --color-primary-hover: #4f46e5;
     --color-primary-light: #818cf8;
@@ -40,9 +108,10 @@
     --color-info: #3b82f6;
     --color-secondary: #64748b;
     --color-secondary-hover: #475569;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    */
 
     /* Gradient Colors */
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
     --gradient-danger: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
     --gradient-info: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
@@ -791,8 +860,10 @@ code:hover {
 }
 
 .badge-secondary {
-    background: rgba(100, 116, 139, 0.15);
-    color: var(--color-secondary);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+    color: var(--color-primary);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    font-weight: 600;
 }
 
 /* ========================================
