@@ -242,7 +242,6 @@ $stats = getDashboardStats();
                                         <th>Waktu</th>
                                         <th>User</th>
                                         <th>Sheet</th>
-                                        <th>Cell</th>
                                         <th>Nilai Lama</th>
                                         <th>Nilai Baru</th>
                                         <th>Client</th>
@@ -269,11 +268,8 @@ $stats = getDashboardStats();
                                                     <?= htmlspecialchars($log['sheet_name']) ?>
                                                 </span>
                                             </td>
-                                            <td>
-                                                <code><?= htmlspecialchars($log['cell_address']) ?></code>
-                                            </td>
-                                            <td><?= htmlspecialchars($log['old_value'] ?? '-') ?></td>
-                                            <td><?= htmlspecialchars($log['new_value'] ?? '-') ?></td>
+                                            <td class="truncate-text"><?= htmlspecialchars($log['old_value'] ?? '-') ?></td>
+                                            <td class="truncate-text"><?= htmlspecialchars($log['new_value'] ?? '-') ?></td>
                                             <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
                                             <td><?= htmlspecialchars($log['kit_number'] ?? '-') ?></td>
                                             <td>

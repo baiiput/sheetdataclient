@@ -773,6 +773,13 @@ select.form-control option {
     transition: background var(--transition-fast);
 }
 
+.table td.truncate-text {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .table tbody tr {
     transition: all var(--transition-fast);
     animation: fadeIn var(--transition-normal) ease-out;
