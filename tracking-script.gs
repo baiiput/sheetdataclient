@@ -24,9 +24,17 @@ const TRACKED_SHEETS = []; // Contoh: ['Client Aktif', 'Client Lepas', 'Client N
  * 1. Buka Apps Script Editor
  * 2. Klik icon jam (Triggers) di sidebar kiri
  * 3. Klik "+ Add Trigger" di kanan bawah
- * 4. Pilih fungsi: onEditTracking
- * 5. Event type: On edit
- * 6. Klik Save
+ *
+ * TRIGGER 1 - Track Edit (UPDATE/INSERT/DELETE cell):
+ * - Pilih fungsi: onEditTracking
+ * - Event type: On edit
+ * - Klik Save
+ *
+ * TRIGGER 2 - Track Insert/Delete Row:
+ * - Klik "+ Add Trigger" lagi
+ * - Pilih fungsi: onChangeTracking
+ * - Event type: On change
+ * - Klik Save
  */
 function onEditTracking(e) {
   try {
@@ -111,6 +119,14 @@ function onEditTracking(e) {
       return;
     }
 
+    // Deteksi action type
+    var actionType = 'UPDATE'; // default
+    if ((oldValue === '' || oldValue === null) && newValue !== '') {
+      actionType = 'INSERT';
+    } else if ((newValue === '' || newValue === null) && oldValue !== '') {
+      actionType = 'DELETE';
+    }
+
     // Ambil informasi tambahan dari row yang diubah
     var rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
     var clientName = formatValue(rowData[0]); // Kolom A: Nama
@@ -129,7 +145,8 @@ function onEditTracking(e) {
       old_value: oldValue.substring(0, 1000), // Limit 1000 karakter
       new_value: newValue.substring(0, 1000),
       client_name: clientName.substring(0, 255),
-      kit_number: kitNumber.substring(0, 100)
+      kit_number: kitNumber.substring(0, 100),
+      action_type: actionType
     };
 
     Logger.log('📊 Tracking change:');
@@ -138,6 +155,7 @@ function onEditTracking(e) {
     Logger.log('  Cell: ' + columnName + row);
     Logger.log('  Old: ' + oldValue);
     Logger.log('  New: ' + newValue);
+    Logger.log('  Type: ' + actionType);
 
     // Kirim ke API
     sendToTrackingAPI(trackingData);
@@ -146,6 +164,96 @@ function onEditTracking(e) {
     Logger.log('❌ Error in onEditTracking: ' + error.message);
     Logger.log('Stack: ' + error.stack);
     // Jangan throw error agar tidak mengganggu user edit
+  }
+}
+
+// ========================================
+// 📝 FUNGSI ON CHANGE - TRACK INSERT/DELETE ROW
+// ========================================
+
+/**
+ * Fungsi untuk tracking insert/delete row
+ * Fungsi ini akan dipanggil setiap ada perubahan struktur sheet
+ */
+function onChangeTracking(e) {
+  try {
+    // Validasi event
+    if (!e) {
+      Logger.log('⚠️ Event tidak valid');
+      return;
+    }
+
+    Logger.log('📋 onChange Event detected:');
+    Logger.log('  Type: ' + e.changeType);
+
+    // Hanya track INSERT_ROW dan REMOVE_ROW
+    if (e.changeType !== 'INSERT_ROW' && e.changeType !== 'REMOVE_ROW') {
+      Logger.log('⏭️ Skip - bukan insert/delete row');
+      return;
+    }
+
+    var sheet = SpreadsheetApp.getActiveSheet();
+    var sheetName = sheet.getName();
+
+    // Skip jika sheet tidak ingin ditrack
+    if (TRACKED_SHEETS.length > 0 && TRACKED_SHEETS.indexOf(sheetName) === -1) {
+      Logger.log('⏭️ Sheet "' + sheetName + '" tidak ditrack');
+      return;
+    }
+
+    // Skip sheet sistem
+    if (sheetName.startsWith('_') || sheetName === 'Template' || sheetName === 'Config') {
+      Logger.log('⏭️ Skip system sheet: ' + sheetName);
+      return;
+    }
+
+    var user = Session.getActiveUser().getEmail();
+    var timestamp = new Date();
+    var actionType = e.changeType === 'INSERT_ROW' ? 'INSERT_ROW' : 'DELETE_ROW';
+
+    // Untuk INSERT_ROW, ambil data dari row yang baru ditambahkan (jika ada)
+    var clientName = '';
+    var kitNumber = '';
+    var rowNumber = 0;
+    var rowInfo = '';
+
+    if (e.changeType === 'INSERT_ROW') {
+      // Google Apps Script tidak memberikan row number yang exact untuk INSERT_ROW
+      // Kita hanya bisa track bahwa ada row baru ditambahkan
+      rowInfo = 'Row baru ditambahkan';
+    } else if (e.changeType === 'REMOVE_ROW') {
+      rowInfo = 'Row dihapus';
+    }
+
+    // Buat objek data tracking untuk row change
+    var trackingData = {
+      spreadsheet_id: SpreadsheetApp.getActiveSpreadsheet().getId(),
+      spreadsheet_name: SpreadsheetApp.getActiveSpreadsheet().getName(),
+      sheet_name: sheetName,
+      user_email: user,
+      timestamp: Utilities.formatDate(timestamp, 'Asia/Jakarta', 'yyyy-MM-dd HH:mm:ss'),
+      row_number: 0, // Tidak spesifik untuk row changes
+      column_number: 0,
+      column_name: '',
+      old_value: '',
+      new_value: rowInfo,
+      client_name: '',
+      kit_number: '',
+      action_type: actionType
+    };
+
+    Logger.log('📊 Tracking row change:');
+    Logger.log('  Sheet: ' + sheetName);
+    Logger.log('  User: ' + user);
+    Logger.log('  Type: ' + actionType);
+    Logger.log('  Info: ' + rowInfo);
+
+    // Kirim ke API
+    sendToTrackingAPI(trackingData);
+
+  } catch (error) {
+    Logger.log('❌ Error in onChangeTracking: ' + error.message);
+    Logger.log('Stack: ' + error.stack);
   }
 }
 
@@ -371,14 +479,28 @@ function getColumnNumberFromLetter(letter) {
  * 3. HAPUS TRIGGER LAMA (jika ada):
  *    - Klik icon jam (⏰) di sidebar
  *    - Hapus semua trigger yang ada
- * 4. Install trigger BARU:
+ * 4. Install TRIGGER BARU (INSTALL 2 TRIGGER!):
+ *
+ *    TRIGGER 1 - Track UPDATE/INSERT/DELETE (cell edit):
  *    - Klik "+ Add Trigger"
  *    - Function: onEditTracking
  *    - Event source: From spreadsheet
  *    - Event type: On edit
  *    - Klik Save
+ *
+ *    TRIGGER 2 - Track INSERT_ROW/DELETE_ROW:
+ *    - Klik "+ Add Trigger" lagi
+ *    - Function: onChangeTracking
+ *    - Event source: From spreadsheet
+ *    - Event type: On change
+ *    - Klik Save
+ *
  * 5. Authorize script saat diminta
- * 6. Test dengan edit cell tanggal di sheet
+ * 6. Run migration SQL di database: migration-add-action-type.sql
+ * 7. Test dengan:
+ *    - Edit cell (akan track UPDATE/INSERT/DELETE)
+ *    - Insert row baru (akan track INSERT_ROW)
+ *    - Delete row (akan track DELETE_ROW)
  *
  * TESTING:
  * - Test serial conversion: Run function testSerialToDate()
@@ -387,9 +509,14 @@ function getColumnNumberFromLetter(letter) {
  * TROUBLESHOOTING:
  * - Cek log: View > Logs atau Executions
  * - Lihat fallback log: Sheet "_Tracking_Log" jika API gagal
- * - Pastikan trigger menggunakan function onEditTracking (bukan yang lain!)
+ * - Pastikan kedua trigger sudah terpasang!
  *
  * CATATAN PENTING:
+ * - UPDATE: Cell value berubah
+ * - INSERT: Cell kosong diisi nilai baru
+ * - DELETE: Cell value dihapus menjadi kosong
+ * - INSERT_ROW: Row baru ditambahkan ke sheet
+ * - DELETE_ROW: Row dihapus dari sheet
  * - Serial 46056 = 04/02/2026
  * - Serial 46025 = 04/01/2026
  * - Formula konversi: (serial - 25569) * 86400 * 1000 = milliseconds

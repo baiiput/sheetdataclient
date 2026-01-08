@@ -273,8 +273,21 @@ $stats = getDashboardStats();
                                             <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
                                             <td><?= htmlspecialchars($log['kit_number'] ?? '-') ?></td>
                                             <td>
-                                                <span class="badge badge-warning">
-                                                    UPDATE
+                                                <?php
+                                                $actionType = $log['action_type'] ?? 'UPDATE';
+                                                $badgeClass = 'badge-warning'; // default for UPDATE
+                                                $badgeIcon = '✏️';
+
+                                                if ($actionType === 'INSERT' || $actionType === 'INSERT_ROW') {
+                                                    $badgeClass = 'badge-success';
+                                                    $badgeIcon = '➕';
+                                                } elseif ($actionType === 'DELETE' || $actionType === 'DELETE_ROW') {
+                                                    $badgeClass = 'badge-danger';
+                                                    $badgeIcon = '🗑️';
+                                                }
+                                                ?>
+                                                <span class="badge <?= $badgeClass ?>">
+                                                    <?= $badgeIcon ?> <?= htmlspecialchars($actionType) ?>
                                                 </span>
                                             </td>
                                         </tr>
