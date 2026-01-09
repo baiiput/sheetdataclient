@@ -172,6 +172,30 @@ $stats = getDashboardStats();
                     <h2 class="card-title">🔍 Filter & Pencarian</h2>
                 </div>
                 <div class="card-body">
+                    <!-- Quick Filters -->
+                    <div class="quick-filters">
+                        <span class="quick-filter-label">⚡ Quick Filter:</span>
+                        <a href="?date_from=<?= date('Y-m-d') ?>&date_to=<?= date('Y-m-d') ?>" class="btn btn-sm btn-quick <?= ($filters['date_from'] === date('Y-m-d') && $filters['date_to'] === date('Y-m-d')) ? 'active' : '' ?>">
+                            📅 Hari Ini
+                        </a>
+                        <a href="?date_from=<?= date('Y-m-d', strtotime('-1 day')) ?>&date_to=<?= date('Y-m-d', strtotime('-1 day')) ?>" class="btn btn-sm btn-quick">
+                            🕐 Kemarin
+                        </a>
+                        <a href="?date_from=<?= date('Y-m-d', strtotime('-7 days')) ?>&date_to=<?= date('Y-m-d') ?>" class="btn btn-sm btn-quick">
+                            📊 7 Hari
+                        </a>
+                        <a href="?date_from=<?= date('Y-m-d', strtotime('-30 days')) ?>&date_to=<?= date('Y-m-d') ?>" class="btn btn-sm btn-quick">
+                            📈 30 Hari
+                        </a>
+                        <a href="?date_from=<?= date('Y-m-01') ?>&date_to=<?= date('Y-m-t') ?>" class="btn btn-sm btn-quick <?= ($filters['date_from'] === date('Y-m-01') && $filters['date_to'] === date('Y-m-t') && empty($filters['search'])) ? 'active' : '' ?>">
+                            📆 Bulan Ini
+                        </a>
+                        <a href="?" class="btn btn-sm btn-secondary">
+                            🔄 Reset
+                        </a>
+                    </div>
+
+                    <!-- Main Filter Form -->
                     <form method="GET" action="" class="filter-form">
                         <div class="filter-grid">
                             <!-- Search -->
