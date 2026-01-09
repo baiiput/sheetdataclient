@@ -781,9 +781,12 @@ select.form-control option {
 }
 
 .table td.kit-cell {
-    white-space: normal;
+    white-space: normal !important;
     line-height: 1.6;
     vertical-align: top;
+    word-wrap: break-word;
+    max-width: none !important;
+    overflow: visible !important;
 }
 
 .table tbody tr {
