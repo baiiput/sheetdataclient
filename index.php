@@ -313,12 +313,11 @@ $stats = getDashboardStats();
                                     <tr>
                                         <th>ID</th>
                                         <th>Waktu</th>
-                                        <th>User</th>
-                                        <th>Sheet</th>
-                                        <th>Nilai Lama</th>
-                                        <th>Nilai Baru</th>
                                         <th>Client</th>
                                         <th>KIT</th>
+                                        <th>User</th>
+                                        <th>Sheet</th>
+                                        <th>Perubahan</th>
                                         <th>Tipe</th>
                                     </tr>
                                 </thead>
@@ -339,18 +338,18 @@ $stats = getDashboardStats();
                                                 <?= $firstTime->format('d/m/Y') ?><br>
                                                 <small class="text-muted"><?= $firstTime->format('H:i:s') ?></small>
                                             </td>
+                                            <td><?= htmlspecialchars($group['client_name'] ?? '-') ?></td>
+                                            <td class="kit-cell"><?= nl2br(htmlspecialchars($group['kit_number'] ?? '-'), false) ?></td>
                                             <td><?= htmlspecialchars($group['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
                                                     <?= htmlspecialchars($group['sheet_name']) ?>
                                                 </span>
                                             </td>
-                                            <td colspan="2" class="group-summary">
+                                            <td class="group-summary">
                                                 <strong><?= $group['count'] ?> perubahan</strong>
                                                 <span class="text-muted">- Klik untuk expand</span>
                                             </td>
-                                            <td><?= htmlspecialchars($group['client_name'] ?? '-') ?></td>
-                                            <td class="kit-cell"><?= nl2br(htmlspecialchars($group['kit_number'] ?? '-'), false) ?></td>
                                             <td>
                                                 <span class="badge badge-info">GROUP</span>
                                             </td>
@@ -368,12 +367,12 @@ $stats = getDashboardStats();
                                                     echo '</small>';
                                                     ?>
                                                 </td>
-                                                <td colspan="3" class="detail-change">
-                                                    <span class="text-muted">Old:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
+                                                <td colspan="4"></td>
+                                                <td class="detail-change">
+                                                    <span class="text-muted">OLD:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
                                                     <br>
-                                                    <span class="text-muted">New:</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
+                                                    <span class="text-muted">NEW:</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
                                                 </td>
-                                                <td colspan="2"></td>
                                                 <td>
                                                     <?php
                                                     $actionType = $log['action_type'] ?? 'UPDATE';
@@ -410,16 +409,19 @@ $stats = getDashboardStats();
                                                 echo '</small>';
                                                 ?>
                                             </td>
+                                            <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
+                                            <td class="kit-cell"><?= nl2br(htmlspecialchars($log['kit_number'] ?? '-'), false) ?></td>
                                             <td><?= htmlspecialchars($log['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
                                                     <?= htmlspecialchars($log['sheet_name']) ?>
                                                 </span>
                                             </td>
-                                            <td class="truncate-text"><?= htmlspecialchars($log['old_value'] ?? '-') ?></td>
-                                            <td class="truncate-text"><?= htmlspecialchars($log['new_value'] ?? '-') ?></td>
-                                            <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
-                                            <td class="kit-cell"><?= nl2br(htmlspecialchars($log['kit_number'] ?? '-'), false) ?></td>
+                                            <td class="change-cell">
+                                                <span class="change-old"><?= htmlspecialchars($log['old_value'] ?? '-') ?></span>
+                                                <span class="change-arrow">→</span>
+                                                <span class="change-new"><?= htmlspecialchars($log['new_value'] ?? '-') ?></span>
+                                            </td>
                                             <td>
                                                 <?php
                                                 $actionType = $log['action_type'] ?? 'UPDATE';

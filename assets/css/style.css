@@ -851,6 +851,28 @@ select.form-control option {
     overflow: visible !important;
 }
 
+.table td.change-cell {
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 300px;
+}
+
+.change-old {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.change-arrow {
+    color: var(--color-primary);
+    font-weight: bold;
+    margin: 0 8px;
+}
+
+.change-new {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
 .table tbody tr {
     transition: all var(--transition-fast);
     animation: fadeIn var(--transition-normal) ease-out;
