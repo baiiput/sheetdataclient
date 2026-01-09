@@ -480,12 +480,23 @@ $stats = getDashboardStats();
     // Toggle group expand/collapse
     function toggleGroup(groupId) {
         const detailRows = document.querySelectorAll(`tr.group-detail[data-group="${groupId}"]`);
+        const headerRow = document.querySelector(`tr.group-header[data-group="${groupId}"]`);
         const icon = document.getElementById(`icon-${groupId}`);
         const isExpanded = detailRows[0] && detailRows[0].style.display !== 'none';
 
+        // Toggle detail rows visibility
         detailRows.forEach(row => {
             row.style.display = isExpanded ? 'none' : 'table-row';
         });
+
+        // Toggle header row expanded class
+        if (headerRow) {
+            if (isExpanded) {
+                headerRow.classList.remove('expanded');
+            } else {
+                headerRow.classList.add('expanded');
+            }
+        }
 
         // Toggle icon
         if (icon) {

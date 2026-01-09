@@ -888,6 +888,7 @@ code:hover {
     cursor: pointer;
     font-weight: 500;
     transition: all var(--transition-fast);
+    border-left: 3px solid transparent;
 }
 
 .group-header:hover {
@@ -895,12 +896,30 @@ code:hover {
     transform: scale(1.001);
 }
 
+/* Expanded state - clear visual indicator */
+.group-header.expanded {
+    background: rgba(14, 165, 233, 0.2);
+    border-left: 3px solid var(--color-primary);
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+.group-header.expanded:hover {
+    background: rgba(14, 165, 233, 0.25);
+}
+
 .expand-icon {
     display: inline-block;
-    font-size: 12px;
-    transition: transform var(--transition-fast);
+    font-size: 14px;
+    font-weight: bold;
+    transition: all var(--transition-fast);
     cursor: pointer;
     user-select: none;
+    color: var(--color-primary);
+}
+
+.group-header.expanded .expand-icon {
+    color: var(--color-primary);
+    transform: rotate(0deg);
 }
 
 .group-summary {
@@ -913,8 +932,9 @@ code:hover {
 }
 
 .group-detail {
-    background: rgba(14, 165, 233, 0.03);
+    background: rgba(14, 165, 233, 0.05);
     font-size: 13px;
+    border-left: 3px solid rgba(14, 165, 233, 0.3);
 }
 
 .group-detail td {
