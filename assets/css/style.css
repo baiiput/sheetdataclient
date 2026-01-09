@@ -780,6 +780,12 @@ select.form-control option {
     text-overflow: ellipsis;
 }
 
+.table td.kit-cell {
+    white-space: normal;
+    line-height: 1.6;
+    vertical-align: top;
+}
+
 .table tbody tr {
     transition: all var(--transition-fast);
     animation: fadeIn var(--transition-normal) ease-out;

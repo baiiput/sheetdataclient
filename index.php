@@ -250,28 +250,7 @@ $stats = getDashboardStats();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($logs as $log):
-                                        // Split kit number jika ada multiple lines
-                                        $kitNumber = $log['kit_number'] ?? '-';
-                                        $kitNumbers = [];
-
-                                        // Check if kit_number has newlines (split by \n, \r\n, or <br>)
-                                        if ($kitNumber && $kitNumber !== '-') {
-                                            // Replace HTML breaks and carriage returns with newline
-                                            $kitNumber = str_replace(['<br>', '<br/>', '<br />', "\r\n", "\r"], "\n", $kitNumber);
-                                            // Split by newline and filter empty values
-                                            $kitNumbers = array_filter(array_map('trim', explode("\n", $kitNumber)));
-                                        }
-
-                                        // If no valid kit numbers, use dash
-                                        if (empty($kitNumbers)) {
-                                            $kitNumbers = ['-'];
-                                        }
-
-                                        // Display one row per kit number
-                                        $isFirstKit = true;
-                                        foreach ($kitNumbers as $singleKit):
-                                    ?>
+                                    <?php foreach ($logs as $log): ?>
                                         <tr>
                                             <td><?= htmlspecialchars($log['id']) ?></td>
                                             <td class="text-nowrap">
@@ -292,7 +271,18 @@ $stats = getDashboardStats();
                                             <td class="truncate-text"><?= htmlspecialchars($log['old_value'] ?? '-') ?></td>
                                             <td class="truncate-text"><?= htmlspecialchars($log['new_value'] ?? '-') ?></td>
                                             <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
-                                            <td><?= htmlspecialchars($singleKit) ?></td>
+                                            <td class="kit-cell">
+                                                <?php
+                                                // Display KIT number with preserved line breaks
+                                                $kitNumber = $log['kit_number'] ?? '-';
+                                                if ($kitNumber && $kitNumber !== '-') {
+                                                    // Convert newlines to <br> for display, each on separate line
+                                                    echo nl2br(htmlspecialchars($kitNumber), false);
+                                                } else {
+                                                    echo '-';
+                                                }
+                                                ?>
+                                            </td>
                                             <td>
                                                 <?php
                                                 $actionType = $log['action_type'] ?? 'UPDATE';
@@ -312,11 +302,7 @@ $stats = getDashboardStats();
                                                 </span>
                                             </td>
                                         </tr>
-                                    <?php
-                                        $isFirstKit = false;
-                                        endforeach; // End kit loop
-                                    endforeach; // End log loop
-                                    ?>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
