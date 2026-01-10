@@ -172,7 +172,7 @@ $stats = getDashboardStats();
                     <h2 class="card-title">🔍 Filter & Pencarian</h2>
                     <span id="filter-toggle-icon" style="font-size: 20px; transition: transform 0.3s;">▼</span>
                 </div>
-                <div class="card-body" id="filter-panel">
+                <div class="card-body collapsible" id="filter-panel">
                     <!-- Quick Filters -->
                     <div class="quick-filters">
                         <span class="quick-filter-label">⚡ Quick Filter:</span>
@@ -525,19 +525,19 @@ $stats = getDashboardStats();
         }
     }
 
-    // Toggle filter panel show/hide
+    // Toggle filter panel show/hide with smooth animation
     function toggleFilterPanel() {
         const panel = document.getElementById('filter-panel');
         const icon = document.getElementById('filter-toggle-icon');
 
-        if (panel.style.display === 'none') {
-            panel.style.display = 'block';
-            icon.textContent = '▼';
-            icon.style.transform = 'rotate(0deg)';
-        } else {
-            panel.style.display = 'none';
+        panel.classList.toggle('collapsed');
+
+        if (panel.classList.contains('collapsed')) {
             icon.textContent = '▶';
             icon.style.transform = 'rotate(-90deg)';
+        } else {
+            icon.textContent = '▼';
+            icon.style.transform = 'rotate(0deg)';
         }
     }
     </script>
