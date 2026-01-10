@@ -348,7 +348,6 @@ $stats = getDashboardStats();
                                             </td>
                                             <td class="group-summary">
                                                 <strong><?= $group['count'] ?> perubahan</strong>
-                                                <span class="text-muted">- Klik untuk expand</span>
                                             </td>
                                             <td>
                                                 <span class="badge badge-info">GROUP</span>
@@ -367,10 +366,9 @@ $stats = getDashboardStats();
                                                     echo '</small>';
                                                     ?>
                                                 </td>
-                                                <td colspan="4"></td>
-                                                <td class="detail-change">
+                                                <td colspan="5" class="detail-change">
                                                     <span class="text-muted">OLD:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
-                                                    <br>
+                                                    <span class="change-arrow">→</span>
                                                     <span class="text-muted">NEW:</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
                                                 </td>
                                                 <td>
