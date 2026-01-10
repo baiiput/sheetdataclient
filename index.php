@@ -168,10 +168,11 @@ $stats = getDashboardStats();
 
             <!-- Filters -->
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFilterPanel()">
                     <h2 class="card-title">🔍 Filter & Pencarian</h2>
+                    <span id="filter-toggle-icon" style="font-size: 20px; transition: transform 0.3s;">▼</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="filter-panel">
                     <!-- Quick Filters -->
                     <div class="quick-filters">
                         <span class="quick-filter-label">⚡ Quick Filter:</span>
@@ -521,6 +522,22 @@ $stats = getDashboardStats();
         // Toggle icon
         if (icon) {
             icon.textContent = isExpanded ? '▶' : '▼';
+        }
+    }
+
+    // Toggle filter panel show/hide
+    function toggleFilterPanel() {
+        const panel = document.getElementById('filter-panel');
+        const icon = document.getElementById('filter-toggle-icon');
+
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            icon.textContent = '▼';
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            panel.style.display = 'none';
+            icon.textContent = '▶';
+            icon.style.transform = 'rotate(-90deg)';
         }
     }
     </script>
