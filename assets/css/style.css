@@ -462,19 +462,19 @@ body {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
     margin-bottom: 24px;
 }
 
 .stat-card {
     background: var(--bg-secondary);
-    border-radius: 16px;
-    padding: 24px;
+    border-radius: 12px;
+    padding: 18px;
     box-shadow: var(--shadow);
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     transition: all var(--transition-normal);
     cursor: pointer;
     animation: fadeIn var(--transition-slow) ease-out;
@@ -488,7 +488,7 @@ body {
 }
 
 .stat-icon {
-    font-size: 36px;
+    font-size: 32px;
     line-height: 1;
     transition: transform var(--transition-fast);
 }
@@ -498,14 +498,14 @@ body {
 }
 
 .stat-value {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
 }
 
 .stat-label {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-muted);
     font-weight: 500;
 }
@@ -1245,7 +1245,26 @@ code:hover {
 @media (max-width: 768px) {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .stat-card {
+        padding: 12px;
+        border-radius: 10px;
+        gap: 10px;
+    }
+
+    .stat-icon {
+        font-size: 24px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .stat-label {
+        font-size: 10px;
     }
 
     .filter-grid {
@@ -1306,14 +1325,30 @@ code:hover {
 @media (max-width: 480px) {
     .stats-grid {
         grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .stat-card {
+        padding: 10px 12px;
+        border-radius: 8px;
+        gap: 8px;
+    }
+
+    .stat-icon {
+        font-size: 20px;
+    }
+
+    .stat-value {
+        font-size: 16px;
+    }
+
+    .stat-label {
+        font-size: 9px;
     }
 
     .header-title {
         font-size: 16px;
-    }
-
-    .stat-value {
-        font-size: 24px;
     }
 
     .login-header h1 {
