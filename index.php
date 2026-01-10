@@ -170,9 +170,9 @@ $stats = getDashboardStats();
             <div class="card">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleFilterPanel()">
                     <h2 class="card-title">🔍 Filter & Pencarian</h2>
-                    <span id="filter-toggle-icon" style="font-size: 20px; transition: transform 0.3s;">▼</span>
+                    <span id="filter-toggle-icon" style="font-size: 20px; transition: transform 0.3s; transform: rotate(-90deg);">▶</span>
                 </div>
-                <div class="card-body collapsible" id="filter-panel">
+                <div class="card-body collapsible collapsed" id="filter-panel">
                     <!-- Quick Filters -->
                     <div class="quick-filters">
                         <span class="quick-filter-label">⚡ Quick Filter:</span>
