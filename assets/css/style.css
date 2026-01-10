@@ -551,20 +551,23 @@ body {
 
 .card-body {
     padding: 24px;
-    overflow: hidden;
 }
 
 .card-body.collapsible {
-    max-height: 2000px;
+    max-height: 3000px;
     opacity: 1;
-    transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s ease-in-out,
+                padding 0.3s ease-in-out;
 }
 
 .card-body.collapsible.collapsed {
-    max-height: 0;
-    opacity: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: hidden !important;
 }
 
 /* ========================================

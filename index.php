@@ -530,12 +530,15 @@ $stats = getDashboardStats();
         const panel = document.getElementById('filter-panel');
         const icon = document.getElementById('filter-toggle-icon');
 
-        panel.classList.toggle('collapsed');
+        // Toggle collapsed class
+        const isCollapsed = panel.classList.toggle('collapsed');
 
-        if (panel.classList.contains('collapsed')) {
+        if (isCollapsed) {
+            // Collapsing
             icon.textContent = '▶';
             icon.style.transform = 'rotate(-90deg)';
         } else {
+            // Expanding
             icon.textContent = '▼';
             icon.style.transform = 'rotate(0deg)';
         }
