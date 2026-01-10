@@ -318,7 +318,6 @@ $stats = getDashboardStats();
                                         <th>User</th>
                                         <th>Sheet</th>
                                         <th>Perubahan</th>
-                                        <th>Tipe</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -349,9 +348,6 @@ $stats = getDashboardStats();
                                             <td class="group-summary">
                                                 <strong><?= $group['count'] ?> perubahan</strong>
                                             </td>
-                                            <td>
-                                                <span class="badge badge-info">GROUP</span>
-                                            </td>
                                         </tr>
 
                                         <!-- Group Detail Rows (Hidden by default) -->
@@ -367,27 +363,31 @@ $stats = getDashboardStats();
                                                     ?>
                                                 </td>
                                                 <td colspan="5" class="detail-change">
-                                                    <span class="text-muted">OLD:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
-                                                    <span class="change-arrow">→</span>
-                                                    <span class="text-muted">NEW:</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $actionType = $log['action_type'] ?? 'UPDATE';
-                                                    $badgeClass = 'badge-warning';
-                                                    $badgeIcon = '✏️';
+                                                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                                        <div style="flex: 1;">
+                                                            <span class="text-muted">OLD:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
+                                                            <br>
+                                                            <span class="text-muted">NEW:</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
+                                                        </div>
+                                                        <div>
+                                                            <?php
+                                                            $actionType = $log['action_type'] ?? 'UPDATE';
+                                                            $badgeClass = 'badge-warning';
+                                                            $badgeIcon = '✏️';
 
-                                                    if ($actionType === 'INSERT' || $actionType === 'INSERT_ROW') {
-                                                        $badgeClass = 'badge-success';
-                                                        $badgeIcon = '➕';
-                                                    } elseif ($actionType === 'DELETE' || $actionType === 'DELETE_ROW') {
-                                                        $badgeClass = 'badge-danger';
-                                                        $badgeIcon = '🗑️';
-                                                    }
-                                                    ?>
-                                                    <span class="badge <?= $badgeClass ?>">
-                                                        <?= $badgeIcon ?> <?= htmlspecialchars($actionType) ?>
-                                                    </span>
+                                                            if ($actionType === 'INSERT' || $actionType === 'INSERT_ROW') {
+                                                                $badgeClass = 'badge-success';
+                                                                $badgeIcon = '➕';
+                                                            } elseif ($actionType === 'DELETE' || $actionType === 'DELETE_ROW') {
+                                                                $badgeClass = 'badge-danger';
+                                                                $badgeIcon = '🗑️';
+                                                            }
+                                                            ?>
+                                                            <span class="badge <?= $badgeClass ?>">
+                                                                <?= $badgeIcon ?> <?= htmlspecialchars($actionType) ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -416,27 +416,31 @@ $stats = getDashboardStats();
                                                 </span>
                                             </td>
                                             <td class="change-cell">
-                                                <span class="change-old"><?= htmlspecialchars($log['old_value'] ?? '-') ?></span>
-                                                <span class="change-arrow">→</span>
-                                                <span class="change-new"><?= htmlspecialchars($log['new_value'] ?? '-') ?></span>
-                                            </td>
-                                            <td>
-                                                <?php
-                                                $actionType = $log['action_type'] ?? 'UPDATE';
-                                                $badgeClass = 'badge-warning';
-                                                $badgeIcon = '✏️';
+                                                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                                    <div style="flex: 1;">
+                                                        <span class="change-old"><?= htmlspecialchars($log['old_value'] ?? '-') ?></span>
+                                                        <br>
+                                                        <span class="change-new"><?= htmlspecialchars($log['new_value'] ?? '-') ?></span>
+                                                    </div>
+                                                    <div>
+                                                        <?php
+                                                        $actionType = $log['action_type'] ?? 'UPDATE';
+                                                        $badgeClass = 'badge-warning';
+                                                        $badgeIcon = '✏️';
 
-                                                if ($actionType === 'INSERT' || $actionType === 'INSERT_ROW') {
-                                                    $badgeClass = 'badge-success';
-                                                    $badgeIcon = '➕';
-                                                } elseif ($actionType === 'DELETE' || $actionType === 'DELETE_ROW') {
-                                                    $badgeClass = 'badge-danger';
-                                                    $badgeIcon = '🗑️';
-                                                }
-                                                ?>
-                                                <span class="badge <?= $badgeClass ?>">
-                                                    <?= $badgeIcon ?> <?= htmlspecialchars($actionType) ?>
-                                                </span>
+                                                        if ($actionType === 'INSERT' || $actionType === 'INSERT_ROW') {
+                                                            $badgeClass = 'badge-success';
+                                                            $badgeIcon = '➕';
+                                                        } elseif ($actionType === 'DELETE' || $actionType === 'DELETE_ROW') {
+                                                            $badgeClass = 'badge-danger';
+                                                            $badgeIcon = '🗑️';
+                                                        }
+                                                        ?>
+                                                        <span class="badge <?= $badgeClass ?>">
+                                                            <?= $badgeIcon ?> <?= htmlspecialchars($actionType) ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endif; ?>

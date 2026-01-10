@@ -908,24 +908,17 @@ select.form-control option {
     max-width: 120px;
 }
 
-/* Perubahan column - changes */
+/* Perubahan column - changes with badge */
 .table th:nth-child(7),
 .table td:nth-child(7) {
-    width: 300px;
-    max-width: 300px;
-}
-
-/* Tipe column - action type badges */
-.table th:nth-child(8),
-.table td:nth-child(8) {
-    width: 90px;
-    max-width: 90px;
-    text-align: center;
+    width: auto;
+    min-width: 350px;
 }
 
 .change-old {
     color: var(--text-muted);
     font-style: italic;
+    display: inline-block;
 }
 
 .change-arrow {
@@ -937,6 +930,7 @@ select.form-control option {
 .change-new {
     color: var(--text-primary);
     font-weight: 500;
+    display: inline-block;
 }
 
 .table tbody tr {
