@@ -498,19 +498,14 @@ $stats = getDashboardStats();
 
     <script src="assets/js/script.js"></script>
     <script>
-    // Toggle group expand/collapse
+    // Toggle group expand/collapse with smooth animation
     function toggleGroup(groupId) {
         const detailRows = document.querySelectorAll(`tr.group-detail[data-group="${groupId}"]`);
         const headerRow = document.querySelector(`tr.group-header[data-group="${groupId}"]`);
         const icon = document.getElementById(`icon-${groupId}`);
-        const isExpanded = detailRows[0] && detailRows[0].style.display !== 'none';
+        const isExpanded = headerRow && headerRow.classList.contains('expanded');
 
-        // Toggle detail rows visibility
-        detailRows.forEach(row => {
-            row.style.display = isExpanded ? 'none' : 'table-row';
-        });
-
-        // Toggle header row expanded class
+        // Toggle header expanded class
         if (headerRow) {
             if (isExpanded) {
                 headerRow.classList.remove('expanded');
@@ -518,6 +513,26 @@ $stats = getDashboardStats();
                 headerRow.classList.add('expanded');
             }
         }
+
+        // Toggle detail rows with smooth animation
+        detailRows.forEach(row => {
+            if (isExpanded) {
+                // Collapsing
+                row.classList.remove('show');
+                row.classList.add('hiding');
+                // After animation, hide completely
+                setTimeout(() => {
+                    row.style.display = 'none';
+                    row.classList.remove('hiding');
+                }, 300); // Match CSS transition duration
+            } else {
+                // Expanding
+                row.style.display = 'table-row';
+                // Trigger reflow for animation
+                void row.offsetHeight;
+                row.classList.add('show');
+            }
+        });
 
         // Toggle icon
         if (icon) {
