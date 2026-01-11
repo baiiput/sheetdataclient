@@ -1012,9 +1012,11 @@ select.form-control option {
 /* Account column - NEW */
 .table th:nth-child(5),
 .table td:nth-child(5) {
-    min-width: 120px;
-    max-width: 180px;
-    white-space: normal;
+    min-width: 220px;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Nomor WA column - with copy button */
