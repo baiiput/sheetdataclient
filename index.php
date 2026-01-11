@@ -343,7 +343,7 @@ $stats = getDashboardStats();
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th style="width: 60px; text-align: center;" title="Expand/Collapse atau ID">▼</th>
                                         <th>Waktu</th>
                                         <th>Client</th>
                                         <th>KIT</th>
