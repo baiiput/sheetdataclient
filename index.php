@@ -31,10 +31,10 @@ function formatWALink($waNumber) {
 
     // Return clickable link + copy button
     return '<div class="wa-number-container">
-        <a href="https://wa.me/' . htmlspecialchars($cleanNumber) . '" target="_blank" class="wa-link" title="Chat di WhatsApp">
+        <a href="https://wa.me/' . htmlspecialchars($cleanNumber) . '" target="_blank" class="wa-link" title="Chat di WhatsApp" onclick="event.stopPropagation()">
             <span class="wa-icon">💬</span> ' . htmlspecialchars($cleanNumber) . '
         </a>
-        <button class="btn-copy" onclick="copyWA(\'' . htmlspecialchars($copyFormat) . '\', this)" title="Copy nomor (format 0xxx)">
+        <button class="btn-copy" onclick="copyWA(\'' . htmlspecialchars($copyFormat) . '\', this, event)" title="Copy nomor (format 0xxx)">
             <span class="copy-icon">📋</span>
         </button>
     </div>';
@@ -396,7 +396,7 @@ $stats = getDashboardStats();
                                                     echo '</small>';
                                                     ?>
                                                 </td>
-                                                <td colspan="5" class="detail-change">
+                                                <td colspan="6" class="detail-change">
                                                     <div>
                                                         <span class="text-muted">OLD:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
                                                         <br>
@@ -594,7 +594,12 @@ $stats = getDashboardStats();
     }
 
     // Copy WhatsApp number to clipboard (convert from 62xxx to 0xxx format)
-    function copyWA(number, buttonElement) {
+    function copyWA(number, buttonElement, event) {
+        // Stop event bubbling to prevent triggering toggleGroup
+        if (event) {
+            event.stopPropagation();
+        }
+
         if (!number) return;
 
         // Copy to clipboard
@@ -833,10 +838,10 @@ $stats = getDashboardStats();
         const copyFormat = '0' + cleanNumber.substring(2); // 628123456789 → 081234567890
 
         return `<div class="wa-number-container">
-            <a href="https://wa.me/${cleanNumber}" target="_blank" class="wa-link" title="Chat di WhatsApp">
+            <a href="https://wa.me/${cleanNumber}" target="_blank" class="wa-link" title="Chat di WhatsApp" onclick="event.stopPropagation()">
                 <span class="wa-icon">💬</span> ${cleanNumber}
             </a>
-            <button class="btn-copy" onclick="copyWA('${copyFormat}', this)" title="Copy nomor (format 0xxx)">
+            <button class="btn-copy" onclick="copyWA('${copyFormat}', this, event)" title="Copy nomor (format 0xxx)">
                 <span class="copy-icon">📋</span>
             </button>
         </div>`;
@@ -882,7 +887,7 @@ $stats = getDashboardStats();
         tr.innerHTML = `
             <td></td>
             <td class="text-nowrap"><small class="text-muted">└─ ${timeStr}</small></td>
-            <td colspan="5" class="detail-change">
+            <td colspan="6" class="detail-change">
                 <div>
                     <span class="text-muted">OLD:</span> ${escapeHtml(log.old_value || '-')}
                     <br>
