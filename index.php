@@ -118,12 +118,12 @@ $stats = getDashboardStats();
                 <div class="header-right">
                     <div class="auto-refresh-controls">
                         <label class="auto-refresh-toggle">
-                            <input type="checkbox" id="auto-refresh-toggle">
+                            <input type="checkbox" id="auto-refresh-toggle" checked>
                             <span class="toggle-label">🔄 Auto Refresh</span>
                         </label>
                         <select id="refresh-interval" class="refresh-interval-select">
-                            <option value="30">30s</option>
-                            <option value="60" selected>1min</option>
+                            <option value="30" selected>30s</option>
+                            <option value="60">1min</option>
                             <option value="120">2min</option>
                             <option value="300">5min</option>
                         </select>
@@ -139,6 +139,11 @@ $stats = getDashboardStats();
             </div>
         </div>
     </header>
+
+    <!-- Auto Refresh Progress Bar -->
+    <div class="refresh-progress-container">
+        <div class="refresh-progress-bar" id="refresh-progress-bar"></div>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -818,37 +823,99 @@ $stats = getDashboardStats();
         return div.innerHTML;
     }
 
+    // ========================================
+    // PROGRESS BAR FUNCTIONALITY
+    // ========================================
+    let progressBarInterval = null;
+
+    // Start progress bar countdown
+    function startProgressBar(duration) {
+        const progressBar = document.getElementById('refresh-progress-bar');
+        if (!progressBar) return;
+
+        // Reset to full width
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+
+        // Force reflow
+        void progressBar.offsetHeight;
+
+        // Animate to 0 width
+        progressBar.style.transition = `width ${duration}ms linear`;
+        progressBar.style.width = '0%';
+    }
+
+    // Reset progress bar
+    function resetProgressBar() {
+        const progressBar = document.getElementById('refresh-progress-bar');
+        if (!progressBar) return;
+
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+        void progressBar.offsetHeight;
+    }
+
+    // Stop progress bar
+    function stopProgressBar() {
+        const progressBar = document.getElementById('refresh-progress-bar');
+        if (!progressBar) return;
+
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '0%';
+    }
+
     // Initialize auto refresh
     document.addEventListener('DOMContentLoaded', function() {
         const toggleCheckbox = document.getElementById('auto-refresh-toggle');
         const intervalSelect = document.getElementById('refresh-interval');
 
+        // Function to start auto refresh with progress bar
+        function startAutoRefresh() {
+            const interval = parseInt(intervalSelect.value) * 1000;
+
+            // Clear existing interval
+            if (refreshInterval) clearInterval(refreshInterval);
+
+            // Start progress bar
+            startProgressBar(interval);
+
+            // Set refresh interval
+            refreshInterval = setInterval(() => {
+                refreshData();
+                startProgressBar(interval); // Restart progress bar after refresh
+            }, interval);
+
+            // Immediate first refresh
+            refreshData();
+        }
+
         // Toggle auto refresh on/off
         toggleCheckbox.addEventListener('change', function() {
             if (this.checked) {
-                const interval = parseInt(intervalSelect.value) * 1000;
-                refreshInterval = setInterval(refreshData, interval);
-                refreshData(); // Immediate first refresh
+                startAutoRefresh();
             } else {
                 if (refreshInterval) {
                     clearInterval(refreshInterval);
                     refreshInterval = null;
                 }
+                stopProgressBar();
             }
         });
 
         // Change refresh interval
         intervalSelect.addEventListener('change', function() {
             if (toggleCheckbox.checked) {
-                // Restart with new interval
-                if (refreshInterval) clearInterval(refreshInterval);
-                const interval = parseInt(this.value) * 1000;
-                refreshInterval = setInterval(refreshData, interval);
+                startAutoRefresh();
             }
         });
 
         // Initial last update time
         updateLastRefreshTime();
+
+        // Auto-start refresh if checkbox is checked on page load
+        if (toggleCheckbox.checked) {
+            startAutoRefresh();
+        }
     });
     </script>
 </body>
