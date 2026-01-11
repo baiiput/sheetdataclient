@@ -648,16 +648,36 @@ $stats = getDashboardStats();
 
             // Build API URL with current filters
             const filters = getCurrentFilters();
-            const apiUrl = new URL('api/get-changes.php', window.location.origin);
+            const apiUrl = new URL('api/get-changes.php', window.location.origin + window.location.pathname.replace('index.php', ''));
             Object.entries(filters).forEach(([key, value]) => {
                 if (value) apiUrl.searchParams.append(key, value);
             });
 
+            console.log('Fetching from:', apiUrl.toString());
+
             // Fetch data
             const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
 
-            const result = await response.json();
+            // Get response text first for debugging
+            const responseText = await response.text();
+            console.log('Response status:', response.status);
+            console.log('Response text:', responseText.substring(0, 200));
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Try to parse JSON
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                console.error('Response was:', responseText);
+                throw new Error('Invalid JSON response from server');
+            }
+
+            console.log('Parsed result:', result);
 
             if (result.success) {
                 // Update stats
@@ -675,6 +695,11 @@ $stats = getDashboardStats();
 
                 // Update last refresh time
                 updateLastRefreshTime();
+
+                // Reset label
+                toggleLabel.textContent = originalText;
+            } else {
+                throw new Error(result.error || 'Unknown error');
             }
         } catch (error) {
             console.error('Auto refresh error:', error);
@@ -684,7 +709,6 @@ $stats = getDashboardStats();
             }, 2000);
         } finally {
             isRefreshing = false;
-            toggleLabel.textContent = originalText;
         }
     }
 

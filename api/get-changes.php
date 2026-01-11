@@ -4,18 +4,26 @@
  * Used for auto-refresh functionality
  */
 
+// Start session first
+session_start();
+
+// Prevent any output before JSON
+ob_start();
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
+
+// Clear any output from includes
+ob_end_clean();
 
 // Set JSON header
 header('Content-Type: application/json');
 
 // Check if user is logged in
-session_start();
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
 
@@ -148,7 +156,10 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
+        'success' => false,
         'error' => 'Server error',
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
     ]);
 }
