@@ -1596,9 +1596,7 @@ code:hover {
     color: white;
 }
 
-.btn-copy.copied .copy-icon::after {
-    content: '✓';
-    position: absolute;
+.btn-copy.copied .copy-icon {
     animation: fadeIn 0.2s ease-in;
 }
 

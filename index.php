@@ -34,7 +34,7 @@ function formatWALink($waNumber) {
         <a href="https://wa.me/' . htmlspecialchars($cleanNumber) . '" target="_blank" class="wa-link" title="Chat di WhatsApp">
             <span class="wa-icon">💬</span> ' . htmlspecialchars($cleanNumber) . '
         </a>
-        <button class="btn-copy" onclick="copyWA(\'' . htmlspecialchars($copyFormat) . '\')" title="Copy nomor (format 0xxx)">
+        <button class="btn-copy" onclick="copyWA(\'' . htmlspecialchars($copyFormat) . '\', this)" title="Copy nomor (format 0xxx)">
             <span class="copy-icon">📋</span>
         </button>
     </div>';
@@ -594,26 +594,26 @@ $stats = getDashboardStats();
     }
 
     // Copy WhatsApp number to clipboard (convert from 62xxx to 0xxx format)
-    function copyWA(number) {
+    function copyWA(number, buttonElement) {
         if (!number) return;
 
         // Copy to clipboard
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(number).then(() => {
                 // Show success feedback
-                showCopyFeedback(event.target);
+                showCopyFeedback(buttonElement);
             }).catch(err => {
                 // Fallback for older browsers
-                fallbackCopy(number);
+                fallbackCopy(number, buttonElement);
             });
         } else {
             // Fallback for older browsers
-            fallbackCopy(number);
+            fallbackCopy(number, buttonElement);
         }
     }
 
     // Fallback copy method for older browsers
-    function fallbackCopy(text) {
+    function fallbackCopy(text, buttonElement) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
@@ -622,7 +622,7 @@ $stats = getDashboardStats();
         textArea.select();
         try {
             document.execCommand('copy');
-            showCopyFeedback(event.target);
+            showCopyFeedback(buttonElement);
         } catch (err) {
             console.error('Failed to copy:', err);
         }
@@ -630,19 +630,18 @@ $stats = getDashboardStats();
     }
 
     // Show visual feedback when copy succeeds
-    function showCopyFeedback(button) {
-        const btn = button.closest('.btn-copy');
-        if (!btn) return;
+    function showCopyFeedback(buttonElement) {
+        if (!buttonElement) return;
 
         // Add copied class
-        btn.classList.add('copied');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<span class="copy-icon">✓</span>';
+        buttonElement.classList.add('copied');
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="copy-icon">✓</span>';
 
         // Remove after 1.5 seconds
         setTimeout(() => {
-            btn.classList.remove('copied');
-            btn.innerHTML = originalHTML;
+            buttonElement.classList.remove('copied');
+            buttonElement.innerHTML = originalHTML;
         }, 1500);
     }
 
@@ -837,7 +836,7 @@ $stats = getDashboardStats();
             <a href="https://wa.me/${cleanNumber}" target="_blank" class="wa-link" title="Chat di WhatsApp">
                 <span class="wa-icon">💬</span> ${cleanNumber}
             </a>
-            <button class="btn-copy" onclick="copyWA('${copyFormat}')" title="Copy nomor (format 0xxx)">
+            <button class="btn-copy" onclick="copyWA('${copyFormat}', this)" title="Copy nomor (format 0xxx)">
                 <span class="copy-icon">📋</span>
             </button>
         </div>`;
