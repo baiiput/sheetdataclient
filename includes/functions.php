@@ -198,11 +198,6 @@ function getChangeLogs($filters = [], $page = 1, $perPage = null) {
             $params['sheet_name'] = $filters['sheet_name'];
         }
 
-        if (!empty($filters['user_email'])) {
-            $where[] = '`user_email` = :user_email';
-            $params['user_email'] = $filters['user_email'];
-        }
-
         if (!empty($filters['date_from'])) {
             $where[] = 'DATE(`changed_at`) >= :date_from';
             $params['date_from'] = $filters['date_from'];

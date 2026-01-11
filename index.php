@@ -13,6 +13,25 @@ require_once 'includes/functions.php';
 requireLogin();
 $currentUser = getCurrentUser();
 
+// Helper function untuk format nomor WA jadi clickable link
+function formatWALink($waNumber) {
+    if (empty($waNumber) || $waNumber === '-') {
+        return '-';
+    }
+
+    // Clean nomor (hapus non-digit)
+    $cleanNumber = preg_replace('/\D/', '', $waNumber);
+
+    if (empty($cleanNumber)) {
+        return htmlspecialchars($waNumber);
+    }
+
+    // Return clickable link
+    return '<a href="https://wa.me/' . htmlspecialchars($cleanNumber) . '" target="_blank" class="wa-link" title="Chat di WhatsApp">
+        <span class="wa-icon">💬</span> ' . htmlspecialchars($cleanNumber) . '
+    </a>';
+}
+
 // Handle logout
 if (isset($_GET['logout'])) {
     logoutUser();
@@ -91,7 +110,6 @@ if (!$hasSearch) {
 
 // Get filter options
 $sheetNames = getSheetNames();
-$userEmails = getUserEmails();
 
 // Get statistics
 $stats = getDashboardStats();
@@ -243,19 +261,6 @@ $stats = getDashboardStats();
                                 </select>
                             </div>
 
-                            <!-- User Filter -->
-                            <div class="form-group">
-                                <label for="user">User</label>
-                                <select id="user" name="user" class="form-control">
-                                    <option value="">Semua User</option>
-                                    <?php foreach ($userEmails as $userEmail): ?>
-                                        <option value="<?= htmlspecialchars($userEmail) ?>" <?= $filters['user_email'] === $userEmail ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($userEmail) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
                             <!-- Date From -->
                             <div class="form-group">
                                 <label for="date_from">Dari Tanggal</label>
@@ -334,7 +339,7 @@ $stats = getDashboardStats();
                                         <th>Waktu</th>
                                         <th>Client</th>
                                         <th>KIT</th>
-                                        <th>User</th>
+                                        <th>Nomor WA</th>
                                         <th>Sheet</th>
                                         <th>Perubahan</th>
                                     </tr>
@@ -358,7 +363,7 @@ $stats = getDashboardStats();
                                             </td>
                                             <td><?= htmlspecialchars($group['client_name'] ?? '-') ?></td>
                                             <td class="kit-cell"><?= nl2br(htmlspecialchars($group['kit_number'] ?? '-'), false) ?></td>
-                                            <td><?= htmlspecialchars($group['user_email']) ?></td>
+                                            <td><?= formatWALink($group['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
                                                     <?= htmlspecialchars($group['sheet_name']) ?>
@@ -424,7 +429,7 @@ $stats = getDashboardStats();
                                             </td>
                                             <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
                                             <td class="kit-cell"><?= nl2br(htmlspecialchars($log['kit_number'] ?? '-'), false) ?></td>
-                                            <td><?= htmlspecialchars($log['user_email']) ?></td>
+                                            <td><?= formatWALink($log['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
                                                     <?= htmlspecialchars($log['sheet_name']) ?>
@@ -748,6 +753,24 @@ $stats = getDashboardStats();
         });
     }
 
+    // Format WA number sebagai link
+    function formatWALink(waNumber) {
+        if (!waNumber || waNumber === '-' || waNumber === '') {
+            return '-';
+        }
+
+        // Clean nomor (hapus non-digit)
+        const cleanNumber = waNumber.replace(/\D/g, '');
+
+        if (!cleanNumber) {
+            return escapeHtml(waNumber);
+        }
+
+        return `<a href="https://wa.me/${cleanNumber}" target="_blank" class="wa-link" title="Chat di WhatsApp">
+            <span class="wa-icon">💬</span> ${cleanNumber}
+        </a>`;
+    }
+
     // Create group header row
     function createGroupHeader(group, groupId, firstTime) {
         const tr = document.createElement('tr');
@@ -763,7 +786,7 @@ $stats = getDashboardStats();
             <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
             <td>${escapeHtml(group.client_name || '-')}</td>
             <td class="kit-cell">${escapeHtml(group.kit_number || '-').replace(/\n/g, '<br>')}</td>
-            <td>${escapeHtml(group.user_email)}</td>
+            <td>${formatWALink(group.user_email)}</td>
             <td><span class="badge badge-secondary">${escapeHtml(group.sheet_name)}</span></td>
             <td class="group-summary"><strong>${group.count} perubahan</strong></td>
         `;
@@ -818,7 +841,7 @@ $stats = getDashboardStats();
             <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
             <td>${escapeHtml(log.client_name || '-')}</td>
             <td class="kit-cell">${escapeHtml(log.kit_number || '-').replace(/\n/g, '<br>')}</td>
-            <td>${escapeHtml(log.user_email)}</td>
+            <td>${formatWALink(log.user_email)}</td>
             <td><span class="badge badge-secondary">${escapeHtml(log.sheet_name)}</span></td>
             <td class="change-cell">
                 <div>

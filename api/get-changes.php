@@ -34,7 +34,6 @@ try {
     $filters = [
         'search' => isset($_GET['search']) ? trim($_GET['search']) : '',
         'sheet_name' => isset($_GET['sheet']) ? trim($_GET['sheet']) : '',
-        'user_email' => isset($_GET['user']) ? trim($_GET['user']) : '',
         'date_from' => isset($_GET['date_from']) ? trim($_GET['date_from']) : date('Y-m-01'),
         'date_to' => isset($_GET['date_to']) ? trim($_GET['date_to']) : date('Y-m-t'),
     ];
@@ -59,11 +58,6 @@ try {
     if (!empty($filters['sheet_name'])) {
         $query .= " AND sheet_name = :sheet_name";
         $params['sheet_name'] = $filters['sheet_name'];
-    }
-
-    if (!empty($filters['user_email'])) {
-        $query .= " AND user_email = :user_email";
-        $params['user_email'] = $filters['user_email'];
     }
 
     if (!empty($filters['date_from'])) {
