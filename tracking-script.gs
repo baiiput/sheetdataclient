@@ -59,7 +59,16 @@ function onEditTracking(e) {
       return;
     }
 
-    var user = Session.getActiveUser().getEmail();
+    // Get user email with fallback methods
+    var user = getUserEmail();
+
+    // Jika masih kosong, skip tracking
+    if (!user || user === '') {
+      Logger.log('⚠️ Cannot get user email - skipping tracking');
+      Logger.log('💡 Solusi: Re-authorize trigger dengan permissions penuh');
+      return;
+    }
+
     var timestamp = new Date();
     var row = e.range.getRow();
     var column = e.range.getColumn();
@@ -207,7 +216,16 @@ function onChangeTracking(e) {
       return;
     }
 
-    var user = Session.getActiveUser().getEmail();
+    // Get user email with fallback methods
+    var user = getUserEmail();
+
+    // Jika masih kosong, skip tracking
+    if (!user || user === '') {
+      Logger.log('⚠️ Cannot get user email - skipping tracking');
+      Logger.log('💡 Solusi: Re-authorize trigger dengan permissions penuh');
+      return;
+    }
+
     var timestamp = new Date();
     var actionType = e.changeType === 'INSERT_ROW' ? 'INSERT_ROW' : 'DELETE_ROW';
 
@@ -353,6 +371,37 @@ function saveFallbackLog(data, errorMessage) {
 // ========================================
 // 🔧 HELPER FUNCTIONS
 // ========================================
+
+/**
+ * Get user email with multiple fallback methods
+ */
+function getUserEmail() {
+  try {
+    // Method 1: Session.getActiveUser() - Most reliable for installable triggers
+    var email = Session.getActiveUser().getEmail();
+    if (email && email !== '') {
+      return email;
+    }
+
+    // Method 2: Session.getEffectiveUser() - Alternative method
+    email = Session.getEffectiveUser().getEmail();
+    if (email && email !== '') {
+      return email;
+    }
+
+    // Method 3: Get owner email as last resort
+    email = SpreadsheetApp.getActiveSpreadsheet().getOwner().getEmail();
+    if (email && email !== '') {
+      Logger.log('⚠️ Using owner email as fallback: ' + email);
+      return email + ' (owner-fallback)';
+    }
+
+  } catch (error) {
+    Logger.log('❌ Error getting user email: ' + error.message);
+  }
+
+  return ''; // Return empty if all methods fail
+}
 
 /**
  * Convert column number to letter (1 = A, 2 = B, dst)

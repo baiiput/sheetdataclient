@@ -3,6 +3,21 @@
 ## Masalah
 Email yang ditambahkan sebagai editor ke Google Sheet tidak ter-record saat melakukan perubahan.
 
+## Error yang Sering Muncul
+
+### Error 1: User Email Kosong
+```
+Log menunjukkan:
+  User:
+
+API response:
+  "Missing required fields: user_email"
+```
+
+**Penyebab:** Trigger tidak memiliki authorization yang cukup untuk membaca email user.
+
+**Solusi:** Re-authorize trigger (lihat LANGKAH 4 di bawah).
+
 ## Penyebab Utama
 
 ### 1. Trigger Tidak Diinstall Dengan Benar
@@ -64,16 +79,44 @@ Maka Anda perlu:
 - Select event type: **On change**
 - Klik **Save**
 
-### LANGKAH 4: Authorize Script (PENTING!)
+### LANGKAH 4: Authorize Script (PENTING! - INI YANG PALING SERING DILUPAKAN!)
 
 Saat Anda menyimpan trigger, Google akan meminta authorization:
-1. Klik **Continue**
-2. Pilih akun Google Anda
-3. Klik **Advanced**
-4. Klik **Go to [Project Name] (unsafe)**
-5. Klik **Allow**
 
-**CATATAN:** Ini normal untuk custom script, bukan berarti berbahaya.
+1. Popup pertama akan muncul → Klik **Continue**
+2. Pilih **akun Google Anda** (yang punya akses ke spreadsheet)
+3. Mungkin muncul warning "Google hasn't verified this app" → Klik **Advanced**
+4. Klik **Go to [Project Name] (unsafe)**
+5. **PENTING:** Review permissions yang diminta:
+   - ✅ "See, edit, create, and delete all your Google Sheets spreadsheets"
+   - ✅ "Connect to an external service"
+   - ✅ "Allow this application to run when you are not present"
+   - ✅ "See your primary Google Account email address"
+6. Scroll ke bawah → Klik **Allow**
+
+**CATATAN:**
+- Ini normal untuk custom script, bukan berarti berbahaya
+- Tanpa authorization penuh, `Session.getActiveUser().getEmail()` akan return empty string
+- Jika Anda skip step ini atau klik "Deny", tracking TIDAK akan berfungsi untuk editor lain
+
+### LANGKAH 4B: Cek Authorization Status (VALIDASI!)
+
+Untuk memastikan authorization berhasil:
+
+1. Di Apps Script Editor, klik **Project Settings** (⚙️ icon di sidebar)
+2. Scroll ke bagian **OAuth Scopes**
+3. Pastikan ada scope ini:
+   ```
+   https://www.googleapis.com/auth/spreadsheets
+   https://www.googleapis.com/auth/script.external_request
+   https://www.googleapis.com/auth/userinfo.email
+   ```
+4. Jika tidak ada scope `userinfo.email`, authorization Anda tidak lengkap!
+
+**Cara Fix:**
+- Hapus semua trigger
+- Install ulang trigger
+- Re-authorize dengan **ALLOW semua permissions**
 
 ### LANGKAH 5: Test Tracking
 
