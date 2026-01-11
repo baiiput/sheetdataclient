@@ -118,6 +118,7 @@ try {
                     'first_time' => $log['changed_at'],
                     'kit_number' => $log['kit_number'],
                     'client_name' => $log['client_name'],
+                    'account' => $log['account'],
                     'user_email' => $log['user_email'],
                     'sheet_name' => $log['sheet_name'],
                     'group_key' => $groupKey,
