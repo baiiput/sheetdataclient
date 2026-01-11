@@ -13,11 +13,20 @@ class Database {
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET
+                PDO::ATTR_EMULATE_PREPARES   => false
             ];
 
+            // Add MySQL specific options only if PDO MySQL extension is loaded
+            if (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
+                $options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES " . DB_CHARSET;
+            }
+
             $this->connection = new PDO($dsn, DB_USER, DB_PASS, $options);
+
+            // Set charset using query if constant not available
+            if (!defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
+                $this->connection->exec("SET NAMES " . DB_CHARSET);
+            }
 
         } catch (PDOException $e) {
             $this->logError('Database connection failed: ' . $e->getMessage());
