@@ -979,51 +979,63 @@ select.form-control option {
 
 /* ========================================
    📏 COLUMN WIDTH STANDARDIZATION
-   Optimized for 4K displays
+   Updated for 8 columns (with Account)
    ======================================== */
 
-/* ID column - narrow */
+/* ID column - expand icon */
 .table th:nth-child(1),
 .table td:nth-child(1) {
-    width: 80px;
+    width: 60px;
 }
 
 /* Waktu column - date/time */
 .table th:nth-child(2),
 .table td:nth-child(2) {
-    width: 140px;
+    width: 130px;
 }
 
-/* Client column - no truncation */
+/* Client column */
 .table th:nth-child(3),
 .table td:nth-child(3) {
-    min-width: 200px;
+    min-width: 160px;
+    max-width: 220px;
     white-space: normal;
 }
 
-/* KIT column - allow multi-line */
+/* KIT column */
 .table th:nth-child(4),
 .table td:nth-child(4) {
-    min-width: 150px;
+    min-width: 140px;
+    max-width: 180px;
 }
 
-/* User column - email addresses */
+/* Account column - NEW */
 .table th:nth-child(5),
 .table td:nth-child(5) {
-    min-width: 220px;
+    min-width: 120px;
+    max-width: 180px;
     white-space: normal;
 }
 
-/* Sheet column - badge names */
+/* Nomor WA column - with copy button */
 .table th:nth-child(6),
 .table td:nth-child(6) {
-    min-width: 150px;
+    min-width: 200px;
+    max-width: 250px;
 }
 
-/* Perubahan column - changes with badge */
+/* Sheet column - badge */
 .table th:nth-child(7),
 .table td:nth-child(7) {
-    min-width: 400px;
+    min-width: 130px;
+    max-width: 170px;
+}
+
+/* Perubahan column - changes */
+.table th:nth-child(8),
+.table td:nth-child(8) {
+    min-width: 300px;
+    max-width: 450px;
 }
 
 .change-old {
