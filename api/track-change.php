@@ -91,7 +91,7 @@ try {
     // Get client IP
     $ipAddress = getClientIP();
 
-    // Prepare data untuk insert (FIXED: kolom row_num & column_num + action_type)
+    // Prepare data untuk insert (FIXED: kolom row_num & column_num + action_type + account)
     $insertData = [
         'spreadsheet_id'   => sanitize($data['spreadsheet_id']),
         'spreadsheet_name' => sanitize($data['spreadsheet_name']),
@@ -105,6 +105,7 @@ try {
         'old_value'        => isset($data['old_value']) ? sanitize($data['old_value']) : null,
         'new_value'        => isset($data['new_value']) ? sanitize($data['new_value']) : null,
         'client_name'      => isset($data['client_name']) ? sanitize($data['client_name']) : null,
+        'account'          => isset($data['account']) ? sanitize($data['account']) : null,
         'kit_number'       => isset($data['kit_number']) ? sanitize($data['kit_number']) : null,
         'action_type'      => isset($data['action_type']) ? sanitize($data['action_type']) : 'UPDATE',
         'ip_address'       => $ipAddress

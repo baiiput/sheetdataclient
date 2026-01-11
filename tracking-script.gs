@@ -16,6 +16,7 @@ const TRACKED_SHEETS = []; // Kosong = track semua sheet
 
 // Konfigurasi kolom data
 const COLUMN_CLIENT_NAME = 0;  // Kolom A (index 0) = Nama Client
+const COLUMN_ACCOUNT = 4;      // Kolom E (index 4) = Account
 const COLUMN_WA_NUMBER = 6;    // Kolom G (index 6) = Nomor WA
 const COLUMN_KIT_NUMBER = 8;   // Kolom I (index 8) = KIT Number
 
@@ -138,6 +139,7 @@ function onEditTracking(e) {
     // Ambil informasi tambahan dari row
     var rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
     var clientName = formatValue(rowData[COLUMN_CLIENT_NAME]);
+    var account = formatValue(rowData[COLUMN_ACCOUNT]);
     var kitNumber = formatValue(rowData[COLUMN_KIT_NUMBER]);
 
     // Buat objek data tracking
@@ -153,6 +155,7 @@ function onEditTracking(e) {
       old_value: oldValue.substring(0, 1000),
       new_value: newValue.substring(0, 1000),
       client_name: clientName.substring(0, 255),
+      account: account.substring(0, 255),
       kit_number: kitNumber.substring(0, 100),
       action_type: actionType
     };

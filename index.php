@@ -13,7 +13,7 @@ require_once 'includes/functions.php';
 requireLogin();
 $currentUser = getCurrentUser();
 
-// Helper function untuk format nomor WA jadi clickable link
+// Helper function untuk format nomor WA jadi clickable link dengan tombol copy
 function formatWALink($waNumber) {
     if (empty($waNumber) || $waNumber === '-') {
         return '-';
@@ -26,10 +26,18 @@ function formatWALink($waNumber) {
         return htmlspecialchars($waNumber);
     }
 
-    // Return clickable link
-    return '<a href="https://wa.me/' . htmlspecialchars($cleanNumber) . '" target="_blank" class="wa-link" title="Chat di WhatsApp">
-        <span class="wa-icon">💬</span> ' . htmlspecialchars($cleanNumber) . '
-    </a>';
+    // Format untuk copy (62xxx → 0xxx)
+    $copyFormat = '0' . substr($cleanNumber, 2); // 628123456789 → 081234567890
+
+    // Return clickable link + copy button
+    return '<div class="wa-number-container">
+        <a href="https://wa.me/' . htmlspecialchars($cleanNumber) . '" target="_blank" class="wa-link" title="Chat di WhatsApp">
+            <span class="wa-icon">💬</span> ' . htmlspecialchars($cleanNumber) . '
+        </a>
+        <button class="btn-copy" onclick="copyWA(\'' . htmlspecialchars($copyFormat) . '\')" title="Copy nomor (format 0xxx)">
+            <span class="copy-icon">📋</span>
+        </button>
+    </div>';
 }
 
 // Handle logout
@@ -45,7 +53,6 @@ $defaultDateTo = date('Y-m-t');    // Last day of current month
 
 $filters = [
     'sheet_name' => $_GET['sheet'] ?? '',
-    'user_email' => $_GET['user'] ?? '',
     'date_from' => $_GET['date_from'] ?? $defaultDateFrom,
     'date_to' => $_GET['date_to'] ?? $defaultDateTo,
     'search' => $_GET['search'] ?? ''
@@ -83,6 +90,7 @@ foreach ($logs as $log) {
                 'group_key' => $groupKey,
                 'kit_number' => $log['kit_number'],
                 'client_name' => $log['client_name'],
+                'account' => $log['account'],
                 'sheet_name' => $log['sheet_name'],
                 'user_email' => $log['user_email'],
                 'date' => $date,
@@ -339,6 +347,7 @@ $stats = getDashboardStats();
                                         <th>Waktu</th>
                                         <th>Client</th>
                                         <th>KIT</th>
+                                        <th>Account</th>
                                         <th>Nomor WA</th>
                                         <th>Sheet</th>
                                         <th>Perubahan</th>
@@ -363,6 +372,7 @@ $stats = getDashboardStats();
                                             </td>
                                             <td><?= htmlspecialchars($group['client_name'] ?? '-') ?></td>
                                             <td class="kit-cell"><?= nl2br(htmlspecialchars($group['kit_number'] ?? '-'), false) ?></td>
+                                            <td><?= htmlspecialchars($group['account'] ?? '-') ?></td>
                                             <td><?= formatWALink($group['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
@@ -429,6 +439,7 @@ $stats = getDashboardStats();
                                             </td>
                                             <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
                                             <td class="kit-cell"><?= nl2br(htmlspecialchars($log['kit_number'] ?? '-'), false) ?></td>
+                                            <td><?= htmlspecialchars($log['account'] ?? '-') ?></td>
                                             <td><?= formatWALink($log['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
@@ -580,6 +591,59 @@ $stats = getDashboardStats();
             icon.textContent = '▼';
             icon.style.transform = 'rotate(0deg)';
         }
+    }
+
+    // Copy WhatsApp number to clipboard (convert from 62xxx to 0xxx format)
+    function copyWA(number) {
+        if (!number) return;
+
+        // Copy to clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(number).then(() => {
+                // Show success feedback
+                showCopyFeedback(event.target);
+            }).catch(err => {
+                // Fallback for older browsers
+                fallbackCopy(number);
+            });
+        } else {
+            // Fallback for older browsers
+            fallbackCopy(number);
+        }
+    }
+
+    // Fallback copy method for older browsers
+    function fallbackCopy(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showCopyFeedback(event.target);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // Show visual feedback when copy succeeds
+    function showCopyFeedback(button) {
+        const btn = button.closest('.btn-copy');
+        if (!btn) return;
+
+        // Add copied class
+        btn.classList.add('copied');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="copy-icon">✓</span>';
+
+        // Remove after 1.5 seconds
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = originalHTML;
+        }, 1500);
     }
 
     // ========================================
@@ -766,9 +830,17 @@ $stats = getDashboardStats();
             return escapeHtml(waNumber);
         }
 
-        return `<a href="https://wa.me/${cleanNumber}" target="_blank" class="wa-link" title="Chat di WhatsApp">
-            <span class="wa-icon">💬</span> ${cleanNumber}
-        </a>`;
+        // Format untuk copy (62xxx → 0xxx)
+        const copyFormat = '0' + cleanNumber.substring(2); // 628123456789 → 081234567890
+
+        return `<div class="wa-number-container">
+            <a href="https://wa.me/${cleanNumber}" target="_blank" class="wa-link" title="Chat di WhatsApp">
+                <span class="wa-icon">💬</span> ${cleanNumber}
+            </a>
+            <button class="btn-copy" onclick="copyWA('${copyFormat}')" title="Copy nomor (format 0xxx)">
+                <span class="copy-icon">📋</span>
+            </button>
+        </div>`;
     }
 
     // Create group header row
@@ -786,6 +858,7 @@ $stats = getDashboardStats();
             <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
             <td>${escapeHtml(group.client_name || '-')}</td>
             <td class="kit-cell">${escapeHtml(group.kit_number || '-').replace(/\n/g, '<br>')}</td>
+            <td>${escapeHtml(group.account || '-')}</td>
             <td>${formatWALink(group.user_email)}</td>
             <td><span class="badge badge-secondary">${escapeHtml(group.sheet_name)}</span></td>
             <td class="group-summary"><strong>${group.count} perubahan</strong></td>
@@ -841,6 +914,7 @@ $stats = getDashboardStats();
             <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
             <td>${escapeHtml(log.client_name || '-')}</td>
             <td class="kit-cell">${escapeHtml(log.kit_number || '-').replace(/\n/g, '<br>')}</td>
+            <td>${escapeHtml(log.account || '-')}</td>
             <td>${formatWALink(log.user_email)}</td>
             <td><span class="badge badge-secondary">${escapeHtml(log.sheet_name)}</span></td>
             <td class="change-cell">
