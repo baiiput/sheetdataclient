@@ -60,13 +60,28 @@ function onEditTracking(e) {
     }
 
     // Get user email with fallback methods
-    var user = getUserEmail();
+    // Priority 1: Try to get from event object (only works for Workspace accounts)
+    var user = '';
 
-    // Jika masih kosong, skip tracking
+    try {
+      if (e.user && e.user.email) {
+        user = e.user.email;
+        Logger.log('✅ Got user email from event object: ' + user);
+      }
+    } catch (err) {
+      Logger.log('⚠️ e.user not available (normal for personal Gmail)');
+    }
+
+    // Priority 2: Try Session methods
     if (!user || user === '') {
-      Logger.log('⚠️ Cannot get user email - skipping tracking');
-      Logger.log('💡 Solusi: Re-authorize trigger dengan permissions penuh');
-      return;
+      user = getUserEmail();
+    }
+
+    // Jika masih kosong, gunakan fallback identifier
+    if (!user || user === '') {
+      Logger.log('⚠️ Cannot get user email - using fallback');
+      Logger.log('💡 Limitation: Personal Gmail tidak support user tracking');
+      user = 'unknown-editor';
     }
 
     var timestamp = new Date();
@@ -219,11 +234,10 @@ function onChangeTracking(e) {
     // Get user email with fallback methods
     var user = getUserEmail();
 
-    // Jika masih kosong, skip tracking
+    // Jika masih kosong, gunakan fallback identifier
     if (!user || user === '') {
-      Logger.log('⚠️ Cannot get user email - skipping tracking');
-      Logger.log('💡 Solusi: Re-authorize trigger dengan permissions penuh');
-      return;
+      Logger.log('⚠️ Cannot get user email - using fallback');
+      user = 'unknown-editor';
     }
 
     var timestamp = new Date();
