@@ -4,9 +4,6 @@
  * Used for auto-refresh functionality
  */
 
-// Start session first
-session_start();
-
 // Prevent any output before JSON
 ob_start();
 
@@ -19,6 +16,9 @@ ob_end_clean();
 
 // Set JSON header
 header('Content-Type: application/json');
+
+// Start session using the same method as main application
+startSession();
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {

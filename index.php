@@ -655,8 +655,13 @@ $stats = getDashboardStats();
 
             console.log('Fetching from:', apiUrl.toString());
 
-            // Fetch data
-            const response = await fetch(apiUrl);
+            // Fetch data with credentials to include session cookie
+            const response = await fetch(apiUrl, {
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
 
             // Get response text first for debugging
             const responseText = await response.text();
