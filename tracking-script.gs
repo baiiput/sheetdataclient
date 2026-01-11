@@ -16,7 +16,7 @@ const TRACKED_SHEETS = []; // Kosong = track semua sheet
 
 // Konfigurasi kolom data
 const COLUMN_CLIENT_NAME = 0;  // Kolom A (index 0) = Nama Client
-const COLUMN_WA_NUMBER = 1;    // Kolom B (index 1) = Nomor WA - SESUAIKAN INI!
+const COLUMN_WA_NUMBER = 6;    // Kolom G (index 6) = Nomor WA
 const COLUMN_KIT_NUMBER = 8;   // Kolom I (index 8) = KIT Number
 
 // ========================================
