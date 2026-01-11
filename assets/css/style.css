@@ -440,6 +440,67 @@ body {
     transition: color var(--transition-fast);
 }
 
+/* Auto Refresh Controls */
+.auto-refresh-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(14, 165, 233, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.auto-refresh-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.auto-refresh-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.toggle-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.refresh-interval-select {
+    padding: 6px 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.refresh-interval-select:hover {
+    border-color: var(--color-primary);
+}
+
+.refresh-interval-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.last-update-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 /* ========================================
    📄 MAIN CONTENT
    ======================================== */
@@ -1243,6 +1304,25 @@ code:hover {
    ======================================== */
 
 @media (max-width: 768px) {
+    .auto-refresh-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 6px 12px;
+    }
+
+    .toggle-label {
+        font-size: 11px;
+    }
+
+    .refresh-interval-select {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .last-update-time {
+        font-size: 10px;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 10px;

@@ -116,6 +116,19 @@ $stats = getDashboardStats();
                     </h1>
                 </div>
                 <div class="header-right">
+                    <div class="auto-refresh-controls">
+                        <label class="auto-refresh-toggle">
+                            <input type="checkbox" id="auto-refresh-toggle">
+                            <span class="toggle-label">🔄 Auto Refresh</span>
+                        </label>
+                        <select id="refresh-interval" class="refresh-interval-select">
+                            <option value="30">30s</option>
+                            <option value="60" selected>1min</option>
+                            <option value="120">2min</option>
+                            <option value="300">5min</option>
+                        </select>
+                        <span id="last-update" class="last-update-time"></span>
+                    </div>
                     <span class="user-info">
                         👤 <?= htmlspecialchars($currentUser['name'] ?? 'User') ?>
                     </span>
@@ -558,6 +571,285 @@ $stats = getDashboardStats();
             icon.style.transform = 'rotate(0deg)';
         }
     }
+
+    // ========================================
+    // AUTO REFRESH FUNCTIONALITY
+    // ========================================
+    let refreshInterval = null;
+    let isRefreshing = false;
+
+    // Get current URL params for filtering
+    function getCurrentFilters() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            search: params.get('search') || '',
+            sheet: params.get('sheet') || '',
+            user: params.get('user') || '',
+            date_from: params.get('date_from') || '',
+            date_to: params.get('date_to') || '',
+            page: params.get('page') || '1'
+        };
+    }
+
+    // Update statistics cards
+    function updateStats(stats) {
+        const statCards = document.querySelectorAll('.stat-card .stat-value');
+        if (statCards[0]) statCards[0].textContent = Number(stats.total_changes).toLocaleString();
+        if (statCards[1]) statCards[1].textContent = Number(stats.changes_today).toLocaleString();
+        if (statCards[2]) statCards[2].textContent = Number(stats.unique_users).toLocaleString();
+        if (statCards[3]) statCards[3].textContent = Number(stats.unique_sheets).toLocaleString();
+    }
+
+    // Update last refresh time
+    function updateLastRefreshTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('last-update').textContent = `📍 ${timeStr}`;
+    }
+
+    // Save currently expanded groups
+    function getExpandedGroups() {
+        const expanded = [];
+        document.querySelectorAll('.group-header.expanded').forEach(header => {
+            const groupId = header.getAttribute('data-group');
+            if (groupId) expanded.push(groupId);
+        });
+        return expanded;
+    }
+
+    // Restore expanded groups after refresh
+    function restoreExpandedGroups(expandedIds) {
+        expandedIds.forEach(groupId => {
+            const header = document.querySelector(`.group-header[data-group="${groupId}"]`);
+            if (header && !header.classList.contains('expanded')) {
+                toggleGroup(groupId);
+            }
+        });
+    }
+
+    // Fetch and update data
+    async function refreshData() {
+        if (isRefreshing) return;
+        isRefreshing = true;
+
+        // Add visual indicator
+        const toggleLabel = document.querySelector('.toggle-label');
+        const originalText = toggleLabel.textContent;
+        toggleLabel.textContent = '⏳ Refreshing...';
+
+        try {
+            // Save expanded groups
+            const expandedGroups = getExpandedGroups();
+
+            // Build API URL with current filters
+            const filters = getCurrentFilters();
+            const apiUrl = new URL('api/get-changes.php', window.location.origin);
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) apiUrl.searchParams.append(key, value);
+            });
+
+            // Fetch data
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update stats
+                updateStats(result.stats);
+
+                // Update table (preserve scroll position)
+                const scrollPos = window.scrollY;
+                updateTable(result.data, result.filters.search);
+                window.scrollTo(0, scrollPos);
+
+                // Restore expanded groups
+                setTimeout(() => {
+                    restoreExpandedGroups(expandedGroups);
+                }, 100);
+
+                // Update last refresh time
+                updateLastRefreshTime();
+            }
+        } catch (error) {
+            console.error('Auto refresh error:', error);
+            toggleLabel.textContent = '❌ Error';
+            setTimeout(() => {
+                toggleLabel.textContent = originalText;
+            }, 2000);
+        } finally {
+            isRefreshing = false;
+            toggleLabel.textContent = originalText;
+        }
+    }
+
+    // Update table with new data
+    function updateTable(groupedLogs, hasSearch) {
+        const tbody = document.querySelector('.table tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        groupedLogs.forEach(item => {
+            if (item.is_group) {
+                // Create group rows
+                const group = item;
+                const groupId = 'group-' + btoa(group.group_key).replace(/=/g, '');
+                const firstTime = new Date(group.first_time);
+
+                // Group header row
+                const headerRow = createGroupHeader(group, groupId, firstTime);
+                tbody.appendChild(headerRow);
+
+                // Group detail rows
+                group.details.forEach(log => {
+                    const detailRow = createGroupDetail(log, groupId);
+                    tbody.appendChild(detailRow);
+                });
+            } else {
+                // Create single row
+                const row = createSingleRow(item.log);
+                tbody.appendChild(row);
+            }
+        });
+    }
+
+    // Create group header row
+    function createGroupHeader(group, groupId, firstTime) {
+        const tr = document.createElement('tr');
+        tr.className = 'group-header';
+        tr.setAttribute('data-group', groupId);
+        tr.onclick = () => toggleGroup(groupId);
+
+        const dateStr = firstTime.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        const timeStr = firstTime.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+        tr.innerHTML = `
+            <td><span class="expand-icon" id="icon-${groupId}">▶</span></td>
+            <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
+            <td>${escapeHtml(group.client_name || '-')}</td>
+            <td class="kit-cell">${escapeHtml(group.kit_number || '-').replace(/\n/g, '<br>')}</td>
+            <td>${escapeHtml(group.user_email)}</td>
+            <td><span class="badge badge-secondary">${escapeHtml(group.sheet_name)}</span></td>
+            <td class="group-summary"><strong>${group.count} perubahan</strong></td>
+        `;
+
+        return tr;
+    }
+
+    // Create group detail row
+    function createGroupDetail(log, groupId) {
+        const tr = document.createElement('tr');
+        tr.className = 'group-detail';
+        tr.setAttribute('data-group', groupId);
+        tr.style.display = 'none';
+
+        const datetime = new Date(log.changed_at);
+        const timeStr = datetime.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+        const actionType = log.action_type || 'UPDATE';
+        const badge = getActionBadge(actionType);
+
+        tr.innerHTML = `
+            <td></td>
+            <td class="text-nowrap"><small class="text-muted">└─ ${timeStr}</small></td>
+            <td colspan="5" class="detail-change">
+                <div>
+                    <span class="text-muted">OLD:</span> ${escapeHtml(log.old_value || '-')}
+                    <br>
+                    <span class="text-muted">NEW:</span> ${escapeHtml(log.new_value || '-')}
+                    <span class="badge ${badge.class}" style="margin-left: 12px; vertical-align: middle;">
+                        ${badge.icon} ${actionType}
+                    </span>
+                </div>
+            </td>
+        `;
+
+        return tr;
+    }
+
+    // Create single row (non-grouped)
+    function createSingleRow(log) {
+        const tr = document.createElement('tr');
+
+        const datetime = new Date(log.changed_at);
+        const dateStr = datetime.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        const timeStr = datetime.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+        const actionType = log.action_type || 'UPDATE';
+        const badge = getActionBadge(actionType);
+
+        tr.innerHTML = `
+            <td>${escapeHtml(log.id)}</td>
+            <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
+            <td>${escapeHtml(log.client_name || '-')}</td>
+            <td class="kit-cell">${escapeHtml(log.kit_number || '-').replace(/\n/g, '<br>')}</td>
+            <td>${escapeHtml(log.user_email)}</td>
+            <td><span class="badge badge-secondary">${escapeHtml(log.sheet_name)}</span></td>
+            <td class="change-cell">
+                <div>
+                    <span class="change-old">${escapeHtml(log.old_value || '-')}</span>
+                    <br>
+                    <span class="change-new">${escapeHtml(log.new_value || '-')}</span>
+                    <span class="badge ${badge.class}" style="margin-left: 12px; vertical-align: middle;">
+                        ${badge.icon} ${actionType}
+                    </span>
+                </div>
+            </td>
+        `;
+
+        return tr;
+    }
+
+    // Get badge for action type
+    function getActionBadge(actionType) {
+        if (actionType === 'INSERT' || actionType === 'INSERT_ROW') {
+            return { class: 'badge-success', icon: '➕' };
+        } else if (actionType === 'DELETE' || actionType === 'DELETE_ROW') {
+            return { class: 'badge-danger', icon: '🗑️' };
+        }
+        return { class: 'badge-warning', icon: '✏️' };
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Initialize auto refresh
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleCheckbox = document.getElementById('auto-refresh-toggle');
+        const intervalSelect = document.getElementById('refresh-interval');
+
+        // Toggle auto refresh on/off
+        toggleCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                const interval = parseInt(intervalSelect.value) * 1000;
+                refreshInterval = setInterval(refreshData, interval);
+                refreshData(); // Immediate first refresh
+            } else {
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
+            }
+        });
+
+        // Change refresh interval
+        intervalSelect.addEventListener('change', function() {
+            if (toggleCheckbox.checked) {
+                // Restart with new interval
+                if (refreshInterval) clearInterval(refreshInterval);
+                const interval = parseInt(this.value) * 1000;
+                refreshInterval = setInterval(refreshData, interval);
+            }
+        });
+
+        // Initial last update time
+        updateLastRefreshTime();
+    });
     </script>
 </body>
 </html>
