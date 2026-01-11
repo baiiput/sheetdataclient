@@ -10,7 +10,7 @@ session_start();
 // Prevent any output before JSON
 ob_start();
 
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
