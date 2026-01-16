@@ -193,9 +193,30 @@ function getChangeLogs($filters = [], $page = 1, $perPage = null) {
         $where = ['1=1'];
         $params = [];
 
-        if (!empty($filters['sheet_name'])) {
+        // ✅ NEW: Sheet filter with checkbox (array support)
+        if (!empty($filters['sheets']) && is_array($filters['sheets'])) {
+            $placeholders = [];
+            foreach ($filters['sheets'] as $i => $sheet) {
+                $key = 'sheet_' . $i;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $sheet;
+            }
+            $where[] = '`sheet_name` IN (' . implode(', ', $placeholders) . ')';
+        } elseif (!empty($filters['sheet_name'])) {
+            // Backward compatibility with old dropdown filter
             $where[] = '`sheet_name` = :sheet_name';
             $params['sheet_name'] = $filters['sheet_name'];
+        }
+
+        // ✅ NEW: Action type filter with checkbox (array support)
+        if (!empty($filters['action_types']) && is_array($filters['action_types'])) {
+            $placeholders = [];
+            foreach ($filters['action_types'] as $i => $type) {
+                $key = 'action_' . $i;
+                $placeholders[] = ':' . $key;
+                $params[$key] = $type;
+            }
+            $where[] = '`action_type` IN (' . implode(', ', $placeholders) . ')';
         }
 
         if (!empty($filters['date_from'])) {
@@ -272,6 +293,21 @@ function getSheetNames() {
     } catch (Exception $e) {
         error_log("Error in getSheetNames: " . $e->getMessage());
         return [];
+    }
+}
+
+/**
+ * Get unique action types
+ */
+function getActionTypes() {
+    try {
+        $db = Database::getInstance();
+        $sql = "SELECT DISTINCT `action_type` FROM `change_logs` WHERE `action_type` IS NOT NULL AND `action_type` != '' ORDER BY `action_type`";
+        $results = $db->fetchAll($sql);
+        return array_column($results, 'action_type');
+    } catch (Exception $e) {
+        error_log("Error in getActionTypes: " . $e->getMessage());
+        return ['UPDATE', 'INSERT', 'DELETE']; // Default fallback
     }
 }
 

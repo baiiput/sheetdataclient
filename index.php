@@ -51,11 +51,22 @@ if (isset($_GET['logout'])) {
 $defaultDateFrom = date('Y-m-01'); // First day of current month
 $defaultDateTo = date('Y-m-t');    // Last day of current month
 
+// ✅ NEW: Get all available sheets and action types
+$allSheets = getSheetNames();
+$allActionTypes = getActionTypes();
+
+// ✅ NEW: Handle checkbox filters (default = all checked)
+$selectedSheets = isset($_GET['sheets']) && is_array($_GET['sheets']) ? $_GET['sheets'] : $allSheets;
+$selectedActionTypes = isset($_GET['action_types']) && is_array($_GET['action_types']) ? $_GET['action_types'] : $allActionTypes;
+
 $filters = [
-    'sheet_name' => $_GET['sheet'] ?? '',
+    'sheets' => $selectedSheets,  // Array of selected sheets
+    'action_types' => $selectedActionTypes,  // Array of selected action types
     'date_from' => $_GET['date_from'] ?? $defaultDateFrom,
     'date_to' => $_GET['date_to'] ?? $defaultDateTo,
-    'search' => $_GET['search'] ?? ''
+    'search' => $_GET['search'] ?? '',
+    // Backward compatibility
+    'sheet_name' => $_GET['sheet'] ?? ''
 ];
 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -115,9 +126,6 @@ foreach ($logs as $log) {
 if (!$hasSearch) {
     $groupedLogs = array_values($groupedLogs);
 }
-
-// Get filter options
-$sheetNames = getSheetNames();
 
 // Get statistics
 $stats = getDashboardStats();
@@ -256,19 +264,6 @@ $stats = getDashboardStats();
                                 >
                             </div>
 
-                            <!-- Sheet Filter -->
-                            <div class="form-group">
-                                <label for="sheet">Sheet</label>
-                                <select id="sheet" name="sheet" class="form-control">
-                                    <option value="">Semua Sheet</option>
-                                    <?php foreach ($sheetNames as $sheetName): ?>
-                                        <option value="<?= htmlspecialchars($sheetName) ?>" <?= $filters['sheet_name'] === $sheetName ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($sheetName) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
                             <!-- Date From -->
                             <div class="form-group">
                                 <label for="date_from">Dari Tanggal</label>
@@ -303,6 +298,66 @@ $stats = getDashboardStats();
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+                        </div>
+
+                        <!-- ✅ NEW: Checkbox Filters Row -->
+                        <div class="checkbox-filters-row">
+                            <!-- Sheet Filter - Checkbox -->
+                            <div class="checkbox-filter-group">
+                                <label class="checkbox-filter-label">
+                                    📋 Filter Sheet
+                                    <button type="button" class="btn-toggle-all" onclick="toggleAllCheckboxes('sheets', <?= count($allSheets) ?>)">
+                                        Toggle All
+                                    </button>
+                                </label>
+                                <div class="checkbox-list">
+                                    <?php foreach ($allSheets as $sheet): ?>
+                                        <label class="checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                name="sheets[]"
+                                                value="<?= htmlspecialchars($sheet) ?>"
+                                                <?= in_array($sheet, $selectedSheets) ? 'checked' : '' ?>
+                                            >
+                                            <span><?= htmlspecialchars($sheet) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+
+                            <!-- Action Type Filter - Checkbox -->
+                            <div class="checkbox-filter-group">
+                                <label class="checkbox-filter-label">
+                                    🏷️ Badge Perubahan
+                                    <button type="button" class="btn-toggle-all" onclick="toggleAllCheckboxes('action_types', <?= count($allActionTypes) ?>)">
+                                        Toggle All
+                                    </button>
+                                </label>
+                                <div class="checkbox-list">
+                                    <?php foreach ($allActionTypes as $type): ?>
+                                        <?php
+                                        $badgeClass = 'badge-warning';
+                                        $badgeIcon = '✏️';
+                                        if ($type === 'INSERT' || $type === 'INSERT_ROW') {
+                                            $badgeClass = 'badge-success';
+                                            $badgeIcon = '➕';
+                                        } elseif ($type === 'DELETE' || $type === 'DELETE_ROW') {
+                                            $badgeClass = 'badge-danger';
+                                            $badgeIcon = '🗑️';
+                                        }
+                                        ?>
+                                        <label class="checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                name="action_types[]"
+                                                value="<?= htmlspecialchars($type) ?>"
+                                                <?= in_array($type, $selectedActionTypes) ? 'checked' : '' ?>
+                                            >
+                                            <span class="badge <?= $badgeClass ?>"><?= $badgeIcon ?> <?= htmlspecialchars($type) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                         </div>
 
@@ -659,10 +714,15 @@ $stats = getDashboardStats();
     // Get current URL params for filtering
     function getCurrentFilters() {
         const params = new URLSearchParams(window.location.search);
+
+        // Get array parameters (sheets[], action_types[])
+        const sheets = params.getAll('sheets[]');
+        const actionTypes = params.getAll('action_types[]');
+
         return {
             search: params.get('search') || '',
-            sheet: params.get('sheet') || '',
-            user: params.get('user') || '',
+            sheets: sheets,
+            action_types: actionTypes,
             date_from: params.get('date_from') || '',
             date_to: params.get('date_to') || '',
             page: params.get('page') || '1'
@@ -722,8 +782,18 @@ $stats = getDashboardStats();
             // Build API URL with current filters
             const filters = getCurrentFilters();
             const apiUrl = new URL('api/get-changes.php', window.location.origin + window.location.pathname.replace('index.php', ''));
+
+            // Handle array and non-array parameters
             Object.entries(filters).forEach(([key, value]) => {
-                if (value) apiUrl.searchParams.append(key, value);
+                if (Array.isArray(value)) {
+                    // For array parameters (sheets, action_types), append each value with [] suffix
+                    value.forEach(item => {
+                        if (item) apiUrl.searchParams.append(key + '[]', item);
+                    });
+                } else if (value) {
+                    // For non-array parameters, append normally
+                    apiUrl.searchParams.append(key, value);
+                }
             });
 
             console.log('Fetching from:', apiUrl.toString());
@@ -1047,6 +1117,22 @@ $stats = getDashboardStats();
             startAutoRefresh();
         }
     });
+
+    // ========================================
+    // CHECKBOX FILTER TOGGLE ALL FUNCTION
+    // ========================================
+    function toggleAllCheckboxes(filterName, totalCount) {
+        const checkboxes = document.querySelectorAll(`input[name="${filterName}[]"]`);
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+        // If all are checked, uncheck all. Otherwise, check all.
+        const shouldCheck = checkedCount !== totalCount;
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = shouldCheck;
+        });
+    }
+
     </script>
 </body>
 </html>

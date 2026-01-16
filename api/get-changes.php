@@ -33,7 +33,8 @@ try {
     // Get filters from request
     $filters = [
         'search' => isset($_GET['search']) ? trim($_GET['search']) : '',
-        'sheet_name' => isset($_GET['sheet']) ? trim($_GET['sheet']) : '',
+        'sheets' => isset($_GET['sheets']) && is_array($_GET['sheets']) ? $_GET['sheets'] : [],
+        'action_types' => isset($_GET['action_types']) && is_array($_GET['action_types']) ? $_GET['action_types'] : [],
         'date_from' => isset($_GET['date_from']) ? trim($_GET['date_from']) : date('Y-m-01'),
         'date_to' => isset($_GET['date_to']) ? trim($_GET['date_to']) : date('Y-m-t'),
     ];
@@ -55,9 +56,26 @@ try {
         $params['search3'] = $searchTerm;
     }
 
-    if (!empty($filters['sheet_name'])) {
-        $query .= " AND sheet_name = :sheet_name";
-        $params['sheet_name'] = $filters['sheet_name'];
+    // Sheet filter with checkbox (array support)
+    if (!empty($filters['sheets']) && is_array($filters['sheets'])) {
+        $placeholders = [];
+        foreach ($filters['sheets'] as $i => $sheet) {
+            $key = 'sheet_' . $i;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $sheet;
+        }
+        $query .= ' AND `sheet_name` IN (' . implode(', ', $placeholders) . ')';
+    }
+
+    // Action type filter with checkbox (array support)
+    if (!empty($filters['action_types']) && is_array($filters['action_types'])) {
+        $placeholders = [];
+        foreach ($filters['action_types'] as $i => $type) {
+            $key = 'action_' . $i;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $type;
+        }
+        $query .= ' AND `action_type` IN (' . implode(', ', $placeholders) . ')';
     }
 
     if (!empty($filters['date_from'])) {
