@@ -453,9 +453,12 @@ $stats = getDashboardStats();
                                                 </td>
                                                 <td colspan="6" class="detail-change">
                                                     <div>
-                                                        <span class="text-muted">OLD:</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
+                                                        <?php
+                                                        $columnName = getColumnName($log['cell_address'] ?? '');
+                                                        ?>
+                                                        <span class="text-muted">OLD (<?= htmlspecialchars($columnName) ?>):</span> <?= htmlspecialchars($log['old_value'] ?? '-') ?>
                                                         <br>
-                                                        <span class="text-muted">NEW:</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
+                                                        <span class="text-muted">NEW (<?= htmlspecialchars($columnName) ?>):</span> <?= htmlspecialchars($log['new_value'] ?? '-') ?>
                                                         <?php
                                                         $actionType = $log['action_type'] ?? 'UPDATE';
                                                         $badgeClass = 'badge-warning';
@@ -503,9 +506,12 @@ $stats = getDashboardStats();
                                             </td>
                                             <td class="change-cell">
                                                 <div>
-                                                    <span class="change-old"><?= htmlspecialchars($log['old_value'] ?? '-') ?></span>
+                                                    <?php
+                                                    $columnName = getColumnName($log['cell_address'] ?? '');
+                                                    ?>
+                                                    <span class="change-old">OLD (<?= htmlspecialchars($columnName) ?>): <?= htmlspecialchars($log['old_value'] ?? '-') ?></span>
                                                     <br>
-                                                    <span class="change-new"><?= htmlspecialchars($log['new_value'] ?? '-') ?></span>
+                                                    <span class="change-new">NEW (<?= htmlspecialchars($columnName) ?>): <?= htmlspecialchars($log['new_value'] ?? '-') ?></span>
                                                     <?php
                                                     $actionType = $log['action_type'] ?? 'UPDATE';
                                                     $badgeClass = 'badge-warning';
@@ -953,15 +959,16 @@ $stats = getDashboardStats();
 
         const actionType = log.action_type || 'UPDATE';
         const badge = getActionBadge(actionType);
+        const columnName = getColumnName(log.cell_address);
 
         tr.innerHTML = `
             <td></td>
             <td class="text-nowrap"><small class="text-muted">└─ ${timeStr}</small></td>
             <td colspan="6" class="detail-change">
                 <div>
-                    <span class="text-muted">OLD:</span> ${escapeHtml(log.old_value || '-')}
+                    <span class="text-muted">OLD (${escapeHtml(columnName)}):</span> ${escapeHtml(log.old_value || '-')}
                     <br>
-                    <span class="text-muted">NEW:</span> ${escapeHtml(log.new_value || '-')}
+                    <span class="text-muted">NEW (${escapeHtml(columnName)}):</span> ${escapeHtml(log.new_value || '-')}
                     <span class="badge ${badge.class}" style="margin-left: 12px; vertical-align: middle;">
                         ${badge.icon} ${actionType}
                     </span>
@@ -982,6 +989,7 @@ $stats = getDashboardStats();
 
         const actionType = log.action_type || 'UPDATE';
         const badge = getActionBadge(actionType);
+        const columnName = getColumnName(log.cell_address);
 
         tr.innerHTML = `
             <td>${escapeHtml(log.id)}</td>
@@ -993,9 +1001,9 @@ $stats = getDashboardStats();
             <td><span class="badge badge-secondary">${escapeHtml(log.sheet_name)}</span></td>
             <td class="change-cell">
                 <div>
-                    <span class="change-old">${escapeHtml(log.old_value || '-')}</span>
+                    <span class="change-old">OLD (${escapeHtml(columnName)}): ${escapeHtml(log.old_value || '-')}</span>
                     <br>
-                    <span class="change-new">${escapeHtml(log.new_value || '-')}</span>
+                    <span class="change-new">NEW (${escapeHtml(columnName)}): ${escapeHtml(log.new_value || '-')}</span>
                     <span class="badge ${badge.class}" style="margin-left: 12px; vertical-align: middle;">
                         ${badge.icon} ${actionType}
                     </span>
@@ -1004,6 +1012,40 @@ $stats = getDashboardStats();
         `;
 
         return tr;
+    }
+
+    // Get column name from cell address
+    function getColumnName(cellAddress) {
+        if (!cellAddress) return 'Kolom';
+
+        // Extract column letter from cell address (e.g., "C2" -> "C")
+        const match = cellAddress.toUpperCase().match(/^([A-Z]+)(\d+)$/);
+        const column = match ? match[1] : cellAddress.toUpperCase();
+
+        // Mapping kolom sesuai dengan spreadsheet
+        const columnMap = {
+            'A': 'Nama',
+            'B': 'Login Gmail',
+            'C': 'Login Starlink',
+            'D': 'Login Alternatif',
+            'E': 'Nomor Account',
+            'F': 'Email Client',
+            'G': 'Nomor CS',
+            'H': 'Alamat',
+            'I': 'Nomor KIT',
+            'J': 'Nomor SN',
+            'K': 'Jatuh Tempo',
+            'L': 'Kode Chrome',
+            'M': 'Pembayaran',
+            'N': 'ID Transaksi',
+            'O': 'Status',
+            'P': 'Paket',
+            'Q': 'Last 4 Digit',
+            'R': 'Nomor Register',
+            'S': 'Tipe Pelanggan',
+        };
+
+        return columnMap[column] || `Kolom ${column}`;
     }
 
     // Get badge for action type

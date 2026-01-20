@@ -327,6 +327,44 @@ function getUserEmails() {
 }
 
 /**
+ * Get column name from column letter
+ * Maps Excel columns (A-Z, AA-ZZ) to readable column names
+ */
+function getColumnName($cellAddress) {
+    // Extract column letter from cell address (e.g., "C2" -> "C")
+    if (preg_match('/^([A-Z]+)(\d+)$/', strtoupper($cellAddress), $matches)) {
+        $column = $matches[1];
+    } else {
+        $column = strtoupper($cellAddress); // Already just a column letter
+    }
+
+    // Mapping kolom sesuai dengan spreadsheet
+    $columnMap = [
+        'A' => 'Nama',
+        'B' => 'Login Gmail',
+        'C' => 'Login Starlink',
+        'D' => 'Login Alternatif',
+        'E' => 'Nomor Account',
+        'F' => 'Email Client',
+        'G' => 'Nomor CS',
+        'H' => 'Alamat',
+        'I' => 'Nomor KIT',
+        'J' => 'Nomor SN',
+        'K' => 'Jatuh Tempo',
+        'L' => 'Kode Chrome',
+        'M' => 'Pembayaran',
+        'N' => 'ID Transaksi',
+        'O' => 'Status',
+        'P' => 'Paket',
+        'Q' => 'Last 4 Digit',
+        'R' => 'Nomor Register',
+        'S' => 'Tipe Pelanggan',
+    ];
+
+    return $columnMap[$column] ?? "Kolom $column";
+}
+
+/**
  * Get dashboard statistics
  */
 function getDashboardStats() {
