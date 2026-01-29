@@ -28,6 +28,9 @@ class Database {
                 $this->connection->exec("SET NAMES " . DB_CHARSET);
             }
 
+            // Set timezone to Asia/Jakarta (WIB)
+            $this->connection->exec("SET time_zone = '+07:00'");
+
         } catch (PDOException $e) {
             $this->logError('Database connection failed: ' . $e->getMessage());
             throw new Exception('Database connection failed. Please check your configuration.');
