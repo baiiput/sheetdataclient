@@ -1741,6 +1741,22 @@ code:hover {
     gap: 6px;
 }
 
+/* Text with copy button container (for Client, KIT, Account) */
+.text-with-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+}
+
+.text-content {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 38px);
+}
+
 .btn-copy {
     background: transparent;
     border: 1px solid var(--border-color);
@@ -1753,6 +1769,14 @@ code:hover {
     justify-content: center;
     min-width: 32px;
     height: 28px;
+    flex-shrink: 0;
+}
+
+.btn-copy-sm {
+    padding: 3px 6px;
+    min-width: 28px;
+    height: 24px;
+    font-size: 12px;
 }
 
 .btn-copy:hover {

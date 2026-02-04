@@ -40,6 +40,24 @@ function formatWALink($waNumber) {
     </div>';
 }
 
+// Helper function untuk format text dengan tombol copy
+function formatTextWithCopy($text, $maxLength = 50) {
+    if (empty($text) || $text === '-') {
+        return '-';
+    }
+
+    $displayText = htmlspecialchars($text);
+    $copyText = htmlspecialchars($text);
+
+    // Return text + copy button
+    return '<div class="text-with-copy">
+        <span class="text-content" title="' . $copyText . '">' . $displayText . '</span>
+        <button class="btn-copy btn-copy-sm" onclick="copyText(\'' . addslashes($copyText) . '\', this, event)" title="Copy">
+            <span class="copy-icon">📋</span>
+        </button>
+    </div>';
+}
+
 // Handle logout
 if (isset($_GET['logout'])) {
     logoutUser();
@@ -425,9 +443,9 @@ $stats = getDashboardStats();
                                                 <?= $firstTime->format('d/m/Y') ?><br>
                                                 <small class="text-muted"><?= $firstTime->format('H:i:s') ?></small>
                                             </td>
-                                            <td><?= htmlspecialchars($group['client_name'] ?? '-') ?></td>
-                                            <td class="kit-cell"><?= nl2br(htmlspecialchars($group['kit_number'] ?? '-'), false) ?></td>
-                                            <td><?= htmlspecialchars($group['account'] ?? '-') ?></td>
+                                            <td><?= formatTextWithCopy($group['client_name'] ?? '-') ?></td>
+                                            <td class="kit-cell"><?= formatTextWithCopy($group['kit_number'] ?? '-') ?></td>
+                                            <td><?= formatTextWithCopy($group['account'] ?? '-') ?></td>
                                             <td><?= formatWALink($group['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
@@ -495,9 +513,9 @@ $stats = getDashboardStats();
                                                 echo '</small>';
                                                 ?>
                                             </td>
-                                            <td><?= htmlspecialchars($log['client_name'] ?? '-') ?></td>
-                                            <td class="kit-cell"><?= nl2br(htmlspecialchars($log['kit_number'] ?? '-'), false) ?></td>
-                                            <td><?= htmlspecialchars($log['account'] ?? '-') ?></td>
+                                            <td><?= formatTextWithCopy($log['client_name'] ?? '-') ?></td>
+                                            <td class="kit-cell"><?= formatTextWithCopy($log['kit_number'] ?? '-') ?></td>
+                                            <td><?= formatTextWithCopy($log['account'] ?? '-') ?></td>
                                             <td><?= formatWALink($log['user_email']) ?></td>
                                             <td>
                                                 <span class="badge badge-secondary">
@@ -709,6 +727,30 @@ $stats = getDashboardStats();
             buttonElement.classList.remove('copied');
             buttonElement.innerHTML = originalHTML;
         }, 1500);
+    }
+
+    // Copy plain text to clipboard (for Client, KIT, Account columns)
+    function copyText(text, buttonElement, event) {
+        // Stop event bubbling to prevent triggering toggleGroup
+        if (event) {
+            event.stopPropagation();
+        }
+
+        if (!text || text === '-') return;
+
+        // Copy to clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                showCopyFeedback(buttonElement);
+            }).catch(err => {
+                // Fallback for older browsers
+                fallbackCopy(text, buttonElement);
+            });
+        } else {
+            // Fallback for older browsers
+            fallbackCopy(text, buttonElement);
+        }
     }
 
     // ========================================
@@ -923,6 +965,24 @@ $stats = getDashboardStats();
         </div>`;
     }
 
+    // Format text with copy button (for Client, KIT, Account)
+    function formatTextWithCopy(text) {
+        if (!text || text === '-') {
+            return '-';
+        }
+
+        const escapedText = escapeHtml(text);
+        // Double escaping for onclick attribute
+        const jsText = text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+        return `<div class="text-with-copy">
+            <span class="text-content" title="${escapedText}">${escapedText}</span>
+            <button class="btn-copy btn-copy-sm" onclick="copyText('${jsText}', this, event)" title="Copy">
+                <span class="copy-icon">📋</span>
+            </button>
+        </div>`;
+    }
+
     // Create group header row
     function createGroupHeader(group, groupId, firstTime) {
         const tr = document.createElement('tr');
@@ -936,9 +996,9 @@ $stats = getDashboardStats();
         tr.innerHTML = `
             <td><span class="expand-icon" id="icon-${groupId}">▶</span></td>
             <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
-            <td>${escapeHtml(group.client_name || '-')}</td>
-            <td class="kit-cell">${escapeHtml(group.kit_number || '-').replace(/\n/g, '<br>')}</td>
-            <td>${escapeHtml(group.account || '-')}</td>
+            <td>${formatTextWithCopy(group.client_name || '-')}</td>
+            <td class="kit-cell">${formatTextWithCopy(group.kit_number || '-')}</td>
+            <td>${formatTextWithCopy(group.account || '-')}</td>
             <td>${formatWALink(group.user_email)}</td>
             <td><span class="badge badge-secondary">${escapeHtml(group.sheet_name)}</span></td>
             <td class="group-summary"><strong>${group.count} perubahan</strong></td>
@@ -994,9 +1054,9 @@ $stats = getDashboardStats();
         tr.innerHTML = `
             <td>${escapeHtml(log.id)}</td>
             <td class="text-nowrap">${dateStr}<br><small class="text-muted">${timeStr}</small></td>
-            <td>${escapeHtml(log.client_name || '-')}</td>
-            <td class="kit-cell">${escapeHtml(log.kit_number || '-').replace(/\n/g, '<br>')}</td>
-            <td>${escapeHtml(log.account || '-')}</td>
+            <td>${formatTextWithCopy(log.client_name || '-')}</td>
+            <td class="kit-cell">${formatTextWithCopy(log.kit_number || '-')}</td>
+            <td>${formatTextWithCopy(log.account || '-')}</td>
             <td>${formatWALink(log.user_email)}</td>
             <td><span class="badge badge-secondary">${escapeHtml(log.sheet_name)}</span></td>
             <td class="change-cell">
